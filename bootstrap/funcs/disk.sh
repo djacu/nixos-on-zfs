@@ -7,24 +7,14 @@ function disks_by_id_symbolic () {
 
 
 function disk_by_id_kname () {
-    # echo $1
     disk=$1
-    # cut1="${disk##*">  '../../"}"
-    # echo "${cut1%"'"*}"
-
     echo $disk | grep -oP "(?<='../../).*?(?=')"
-    # echo $disk | grep -oP "'.*?'"
 }
 
 
 function disk_by_id_sympath () {
-    # echo $1
     disk=$1
-    # cut1="${disk##*">  '../../"}"
-    # echo "${cut1%"'"*}"
-
     echo $disk | grep -oP "(?<=').*?(?=' ->)"
-    # echo $disk | grep -oP "'.*?'"
 }
 
 
@@ -49,12 +39,41 @@ function filter_lsblk_by_disk () {
 
     echo ${filtered[@]}
 }
-declare temp=$(lsblk_filesystems)
-filter_lsblk_by_disk "${temp[@]}"
 
-# echo $(lsblk_filesystems)
-# declare filtered_lsblk=$(filter_lsblk_by_disk "${temp[@]}")
-# echo ${filtered_lsblk[@]}
+
+function get_only_disks () {
+    local all_disks=$(disks_by_id_symbolic)
+
+    declare filesystems=$(lsblk_filesystems)
+    declare fs_disks=$(filter_lsblk_by_disk "${filesystems[@]}")
+
+    while IFS= read -r disk; do
+        local kname="$(disk_by_id_kname "${disk[@]}")"
+
+        if [[ " ${fs_disks[*]} " =~ " ${kname} " ]]; then
+            echo "${disk[@]}"
+        fi
+    done < <(printf '%s\n' "$all_disks")
+}
+
+
+function main3 () {
+    # get_only_disks
+    # local temp=$(get_only_disks)
+    # for line in ${temp[@]}; do
+    #     # echo "${line[@]}"
+    #     echo ${line[@]}
+    # done
+    # echo "${temp[@]}"
+    # echo "${temp[0]}"
+    # printf '%s\n' "${temp[@]}"
+
+    local only_disks=$(get_only_disks)
+    while IFS= read -r disk; do
+        echo "${disk[@]}"
+    done < <(printf '%s\n' "$only_disks")
+}
+main3
 
 
 function main2 () {
@@ -66,6 +85,7 @@ function main2 () {
 
     done < <(printf '%s\n' "$(lsblk_filesystems)")
 }
+# main2
 
 
 function main () {
@@ -83,8 +103,4 @@ function main () {
 
     echo "$all_disks" | wc -l
 }
-
-
 # main
-# main2
-# disks_by_id_symbolic
