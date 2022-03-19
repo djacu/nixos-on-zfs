@@ -140,33 +140,3 @@ function add_disks_to_pool () {
     echo ${pool[@]}
 }
 add_disks_to_pool
-
-
-function main2 () {
-    while IFS= read -r disk; do
-        echo $disk
-
-        # echo "$(disk_by_id_kname "${disk[@]}")"
-        # echo "$(disk_by_id_sympath "${disk[@]}")"
-
-    done < <(printf '%s\n' "$(lsblk_filesystems)")
-}
-# main2
-
-
-function main () {
-    local all_disks=$(stat --format="%N" /dev/disk/by-id/* | column -t)
-
-    local COUNT=1
-    local disk_array=()
-    while IFS= read -r disk; do
-        # echo "Disk $disk"
-        echo "Disk $(printf "%2s" $COUNT) is $disk"
-        # echo "Disk $COUNT is $disk"
-        disk_array+=($disk)
-        COUNT=$((COUNT+1))
-    done < <(printf '%s\n' "$all_disks")
-
-    echo "$all_disks" | wc -l
-}
-# main
