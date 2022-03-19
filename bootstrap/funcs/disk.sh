@@ -170,11 +170,11 @@ function add_disks_to_pool () {
 # again if there is a mistake.
 function ask_user_for_disks () {
     while true; do
-        local disks=$(add_disks_to_pool)
+        declare -a disks=($(add_disks_to_pool))
 
         echo "" >&2
         echo "Are you satisfied with your disk(s) selection?" >&2
-        echo "${disks[@]}" >&2
+        printf "%s\n" "${disks[@]}" >&2
         select yn in "Yes" "No";
         do
             case $yn in
