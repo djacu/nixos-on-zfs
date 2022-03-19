@@ -89,6 +89,29 @@ function select_only_disks_by_idx () {
 select_only_disks_by_idx 4
 
 
+function ask_for_disk_by_idx () {
+    while true; do
+        read user_idx
+
+        local re='^[0-9]+$'
+        if ! [[ $user_idx =~ $re ]]; then
+            echo "Not a number!"
+            continue
+        fi
+
+        local num_disks=$(get_only_disks | wc -l)
+        if ! (( $user_idx >= 1 && $user_idx <= $num_disks )); then
+            echo "$user_idx is out of bounds! Upper bound is $num_disks"
+            continue
+        fi
+
+        echo $user_idx
+        break
+    done
+}
+ask_for_disk_by_idx
+
+
 function main2 () {
     while IFS= read -r disk; do
         echo $disk
