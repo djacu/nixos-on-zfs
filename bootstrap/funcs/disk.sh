@@ -66,7 +66,7 @@ function show_only_disks () {
 
     local count=1
     while IFS= read -r disk; do
-        echo "Disk $(printf "%${padding}s" $count) is $disk"
+        echo "Disk $(printf "%${padding}s" $count) is $disk" >&2
         ((count++))
     done < <(printf '%s\n' "$only_disks")
 }
@@ -139,4 +139,29 @@ function add_disks_to_pool () {
     done
     echo ${pool[@]}
 }
-add_disks_to_pool
+
+
+function ask_user_for_disks () {
+    while true; do
+        local disks=$(add_disks_to_pool)
+
+        echo "" >&2
+        echo "Are you satisfied with your disk(s) selection?" >&2
+        echo "${disks[@]}" >&2
+        select yn in "Yes" "No";
+        do
+            case $yn in
+                Yes ) echo "${disks[@]}"; break 2;;
+                No ) echo "" >&2; break 1;;
+            esac
+        done
+
+    done
+}
+
+
+function main() {
+    local DISK=$(ask_user_for_disks)
+    echo ${DISK[@]}
+}
+main
