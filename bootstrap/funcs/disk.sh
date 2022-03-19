@@ -1,8 +1,10 @@
 #!/bin/bash
 
+source ./math.sh
+
 
 function disks_by_id_symbolic () {
-    echo "$(stat --format="%N" /dev/disk/by-id/* | column -t)"
+    echo "$(stat --format="%N" /dev/disk/by-id/*)"
 }
 
 
@@ -57,23 +59,18 @@ function get_only_disks () {
 }
 
 
-function main3 () {
-    # get_only_disks
-    # local temp=$(get_only_disks)
-    # for line in ${temp[@]}; do
-    #     # echo "${line[@]}"
-    #     echo ${line[@]}
-    # done
-    # echo "${temp[@]}"
-    # echo "${temp[0]}"
-    # printf '%s\n' "${temp[@]}"
+function show_only_disks () {
+    local only_disks=$(get_only_disks | column -t)
+    local num_disks=$(get_only_disks | wc -l)
+    local padding=$(num_digits "$num_disks")
 
-    local only_disks=$(get_only_disks)
+    local count=1
     while IFS= read -r disk; do
-        echo "${disk[@]}"
+        echo "Disk $(printf "%${padding}s" $count) is $disk"
+        ((count++))
     done < <(printf '%s\n' "$only_disks")
 }
-main3
+show_only_disks
 
 
 function main2 () {
