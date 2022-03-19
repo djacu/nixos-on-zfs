@@ -73,6 +73,22 @@ function show_only_disks () {
 show_only_disks
 
 
+function select_only_disks_by_idx () {
+    local idx=$1
+
+    local only_disks=$(get_only_disks | column -t)
+    local count=1
+    while IFS= read -r disk; do
+        if [[ $idx == $count ]]; then
+            disk_by_id_sympath "${disk[@]}"
+            break
+        fi
+        ((count++))
+    done < <(printf '%s\n' "$only_disks")
+}
+select_only_disks_by_idx 4
+
+
 function main2 () {
     while IFS= read -r disk; do
         echo $disk
