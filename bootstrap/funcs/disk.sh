@@ -70,7 +70,6 @@ function show_only_disks () {
         ((count++))
     done < <(printf '%s\n' "$only_disks")
 }
-show_only_disks
 
 
 function select_only_disks_by_idx () {
@@ -86,22 +85,31 @@ function select_only_disks_by_idx () {
         ((count++))
     done < <(printf '%s\n' "$only_disks")
 }
-select_only_disks_by_idx 4
 
 
 function ask_for_disk_by_idx () {
     while true; do
-        read user_idx
+        read -p "Select a disk by number. Return 0 or nothing to finish: " user_idx
+
+        if [ -z $user_idx ]; then
+            echo $user_idx
+            break
+        fi
+
+        if [ $user_idx -eq 0 ]; then
+            echo $user_idx
+            break
+        fi
 
         local re='^[0-9]+$'
         if ! [[ $user_idx =~ $re ]]; then
-            echo "Not a number!"
+            echo "Not a number!" >&2
             continue
         fi
 
         local num_disks=$(get_only_disks | wc -l)
         if ! (( $user_idx >= 1 && $user_idx <= $num_disks )); then
-            echo "$user_idx is out of bounds! Upper bound is $num_disks"
+            echo "$user_idx is out of bounds! Upper bound is $num_disks" >&2
             continue
         fi
 
@@ -109,7 +117,29 @@ function ask_for_disk_by_idx () {
         break
     done
 }
-ask_for_disk_by_idx
+
+
+function add_disks_to_pool () {
+    show_only_disks
+
+    declare -a pool=()
+    while true; do
+        local idx=$(ask_for_disk_by_idx)
+
+        if [ -z $idx ]; then
+            break
+        fi
+
+        if [ $idx -eq 0 ]; then
+            break
+        fi
+
+        local disk=$(select_only_disks_by_idx $idx)
+        pool+=($disk)
+    done
+    echo ${pool[@]}
+}
+add_disks_to_pool
 
 
 function main2 () {
