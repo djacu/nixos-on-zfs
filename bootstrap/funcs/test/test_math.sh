@@ -1,7 +1,7 @@
 #!/bin/bash
 
-call_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$call_dir/../math.sh"
+this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$this_dir/../math.sh"
 
 
 function test_func_with_arrays () {
