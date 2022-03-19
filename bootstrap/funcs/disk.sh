@@ -1,6 +1,7 @@
 #!/bin/bash
 
-source ./math.sh
+this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$this_dir/math.sh"
 
 
 # Returns a newline seperate string of all the disks devices by ID
@@ -184,10 +185,3 @@ function ask_user_for_disks () {
 
     done
 }
-
-
-function main() {
-    local DISK=$(ask_user_for_disks)
-    echo ${DISK[@]}
-}
-main

@@ -1,6 +1,8 @@
 #!/bin/bash
 # Import external functions
-source ./funcs/parts.sh
+this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$this_dir/funcs/parts.sh"
+source "$this_dir/funcs/disk.sh"
 
 # Unique pool suffix. ZFS expects pool names to be unique,
 # therefore it’s recommended to create pools with a unique suffix
@@ -15,51 +17,10 @@ INST_CONFIG_FILE='zfs.nix'
 # Define the disk by-id path for re-use
 DEV_DISK=/dev/disk/by-id
 
-
-declare_disks() {
-    # Lists the disk devices by ID
-    # Asks the user to specify desired devices
-    # Appends the absolute path to the specified devices
-
-    # List available disks by ID with their symlink
-    stat --format="%N" /dev/disk/by-id/* | column -t
-
-    local text="Declare, by ID, the disks for an array or a single disk.
-If multiple disks are given, the first will be used for the primary EFI partition.
-: "
-    text="$text"
-    read -p "$text" -a DISK
-    local tempDisk=()
-    local disk
-    for disk in ${DISK[@]}; do
-        tempDisk+=( "$DEV_DISK/$disk" )
-    done
-    unset DISK
-    DISK="${tempDisk[@]}"
-}
-
-get_disks() {
-    # Asks the user to pick disks for the new zpool and confirms the users selection.
-    disks_okay=0
-    while [ $disks_okay -eq 0 ]
-    do
-        declare_disks
-
-        echo "Are you satisfied with your disk(s) selection?"
-        echo "${DISK[@]}"
-        select yn in "Yes" "No";
-        do
-            case $yn in
-                Yes ) disks_okay=1; break;;
-                No ) break;;
-            esac
-        done
-
-    done
-}
-
-get_disks
-
+# Lists the disk devices by ID
+# Asks the user to specify desired devices
+echo ""
+DISK=$(ask_user_for_disks)
 
 # Choose a primary disk.
 # This disk will be used for primary EFI partition, default to first disk in the array.
