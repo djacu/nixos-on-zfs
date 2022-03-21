@@ -35,17 +35,17 @@ function set_partition_size()
 #       kilo = kilobyte
 #       mega = megabyte
 #       giga = gigabyte
-# 
+#
 # Examples
-#   echo $(get_system_memory)
+#   get_system_memory
 #       31.29492568969726562500
-#   echo $(get_system_memory -s byte)
+#   get_system_memory -s byte
 #       33602670592.00000000000000000000
-#   echo $(get_system_memory -s kibi)
+#   get_system_memory -s kibi
 #       32815108.00000000000000000000
-#   echo $(get_system_memory -s mebi)
+#   get_system_memory -s mebi
 #       32046.00390625000000000000
-#   echo $(get_system_memory -s gibi)
+#   get_system_memory -s gibi
 #       31.29492568969726562500
 #
 function get_system_memory()
