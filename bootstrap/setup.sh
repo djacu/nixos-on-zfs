@@ -3,6 +3,7 @@
 this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$this_dir/funcs/parts.sh"
 source "$this_dir/funcs/disk.sh"
+source "$this_dir/funcs/math.sh"
 
 # Unique pool suffix. ZFS expects pool names to be unique,
 # therefore it’s recommended to create pools with a unique suffix
@@ -50,7 +51,7 @@ set_partition_size INST_PARTSIZE_BPOOL "boot pool" 4
 # Set swap size. It’s recommended to setup a swap partition. If you
 # intend to use hibernation, the minimum should be no less than RAM
 # size. Skip if swap is not needed.
-SYSTEM_MEM=$(free --giga | awk '/^Mem:/{print $2}')
+SYSTEM_MEM=$(ceil $(get_system_memory -s gibi))
 set_partition_size INST_PARTSIZE_SWAP "swap" $SYSTEM_MEM
 
 # Root pool size, use all remaining disk space if not set.
