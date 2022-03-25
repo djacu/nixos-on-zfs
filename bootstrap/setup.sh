@@ -15,9 +15,6 @@ INST_ID=nixos
 # Root on ZFS configuration file name
 INST_CONFIG_FILE='zfs.nix'
 
-# Define the disk by-id path for re-use
-DEV_DISK=/dev/disk/by-id
-
 # Lists the disk devices by ID
 # Asks the user to specify desired devices
 echo ""
