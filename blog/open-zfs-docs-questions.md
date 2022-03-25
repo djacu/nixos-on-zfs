@@ -12,6 +12,7 @@ I found answer to some of my questions there as well as some more information th
 ## Open Questions
 * Why have a `mountpoint` for zpool and bpool that are anything but none especially when `canmount=off`?
 * What does this line do (`mount -o bind /mnt/state/$i /mnt/$i`)?
+  * From the `mount` man page, it says, "Remount part of the file hierarchy somewhere else.". So it appears that this is a way to store system mutable state in a separate `state` dataset that is not reproducible by NixOS.
 * Check if datasets that have `canmount=noauto` get added to `fstab` later.
 * In the Overview - Dataset layout, the container field for Dataset `rpool/sys/ROOT`, says "contains boot environment". Should that be "contains ***root*** environment"?
 
