@@ -151,3 +151,11 @@ zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 # Create an `empty` dataset to use as an original snapshot for an immutable file system.
 zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
 zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
+
+
+# Format and mount ESP
+for i in ${DISK}; do
+    mkfs.vfat -n EFI ${i}-part1
+    mkdir -p /mnt/boot/efis/${i##*/}-part1
+    mount -t vfat ${i}-part1 /mnt/boot/efis/${i##*/}-part1
+done
