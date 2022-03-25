@@ -11,10 +11,15 @@ I found answer to some of my questions there as well as some more information th
 
 ## Open Questions
 * Why have a `mountpoint` for zpool and bpool that are anything but none especially when `canmount=off`?
-* What does this line do (`mount -o bind /mnt/state/$i /mnt/$i`)?
+  * I would have guessed for inheritance but `bpool/sys/BOOT/default` also sets the `mountpoint` the same as `bpool`.
+* What does this line do (`mount -o bind /mnt/state/$i /mnt/$i`)? Or more specifically, what is its intention?
   * From the `mount` man page, it says, "Remount part of the file hierarchy somewhere else.". So it appears that this is a way to store system mutable state in a separate `state` dataset that is not reproducible by NixOS.
 * Check if datasets that have `canmount=noauto` get added to `fstab` later.
 * In the Overview - Dataset layout, the container field for Dataset `rpool/sys/ROOT`, says "contains boot environment". Should that be "contains ***root*** environment"?
+* How does it work when you have an unmounted dataset between two mounted datasets?
+  * For example, if dataset `a` is created with `mountpoint=/` and `canmount=on`, it has a child `b` with `canmount=off`, and that has a child `c` with `canmount=on`, what is the resulting structure look like?
+    * It appears that the resulting structure will look like `/a/b/c` with each dataset being mounted under its parent (e.g. `b` will be mounted at `/a/b` and `c` will be mounted at `/a/b/c`). But `b` still cannot be mounted. So if a file is placed under dataset `b` will it appear under dataset `a`?
+    * It appears that if I had set `mountpoint=none` for `b`, then `c` would have inherited that.
 
 ## Answered Questions
 
