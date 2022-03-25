@@ -103,3 +103,51 @@ zfs create \
     -o keylocation=prompt \
     -o keyformat=passphrase \
     rpool_$INST_UUID/$INST_ID
+
+
+# Create BOOT datasets
+zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID
+zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID/BOOT
+zfs create -o mountpoint=/boot -o canmount=noauto bpool_$INST_UUID/$INST_ID/BOOT/default
+zfs mount bpool_$INST_UUID/$INST_ID/BOOT/default
+
+
+# Create DATA datasets
+zfs create -o canmount=off -o mountpoint=none   rpool_$INST_UUID/$INST_ID/DATA
+
+# Create dataset for mounting /nix
+zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/local
+for i in {nix,}; do
+    zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i
+done
+
+# Create user datasets / shared datasets / persistent datasets
+zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/default
+
+for i in {usr,var,var/lib};
+do
+    zfs create -o canmount=off                  rpool_$INST_UUID/$INST_ID/DATA/default/$i
+done
+
+for i in {home,root,srv,usr/local,var/log,var/spool};
+do
+    zfs create -o canmount=on                   rpool_$INST_UUID/$INST_ID/DATA/default/$i
+done
+chmod 750 /mnt/root
+
+# Create a state dataset for saving mutable data in case an immutable file system is used
+zfs create -o canmount=on                       rpool_$INST_UUID/$INST_ID/DATA/default/state
+for i in {/etc/nixos,/etc/cryptkey.d}; do
+  mkdir -p /mnt/state/$i /mnt/$i
+  mount -o bind /mnt/state/$i /mnt/$i
+done
+
+
+# Create ROOT datasets
+zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
+zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
+
+# Create an `empty` dataset to use as an original snapshot for an immutable file system.
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
+zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
