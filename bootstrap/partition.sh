@@ -68,3 +68,38 @@ zpool create \
     $(for i in ${DISK}; do
         printf "$i-part2 ";
     done)
+
+
+# Create the root pool
+zpool create \
+    -o ashift=13 \
+    -o autotrim=on \
+    -O acltype=posixacl \
+    -O canmount=off \
+    -O compression=zstd \
+    -O dnodesize=auto \
+    -O encryption=aes-256-gcm \
+    -O keylocation=prompt \
+    -O keyformat=passphrase \
+    -O normalization=formD \
+    -O relatime=on \
+    -O xattr=sa \
+    -O mountpoint=/ \
+    -R /mnt \
+    rpool_$INST_UUID \
+    $INST_VDEV \
+    $(for i in ${DISK}; do
+        printf "$i-part3 ";
+    done)
+
+
+# Encrypt the system dataset. Pick a strong password.
+# Once compromised, changing password will not keep your data safe.
+# See zfs-change-key(8) for more info.
+zfs create \
+    -o canmount=off \
+    -o mountpoint=none \
+    -o encryption=aes-256-gcm \
+    -o keylocation=prompt \
+    -o keyformat=passphrase \
+    rpool_$INST_UUID/$INST_ID
