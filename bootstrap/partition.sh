@@ -159,3 +159,18 @@ for i in ${DISK}; do
     mkdir -p /mnt/boot/efis/${i##*/}-part1
     mount -t vfat ${i}-part1 /mnt/boot/efis/${i##*/}-part1
 done
+
+
+## Create optional user data datasets to omit data form rollback
+for i in {var/games,var/www,var/lib/docker,var/lib/nfs}; do
+    read -r -p "Do you want to add $i to the user datasets? [y/N] " response
+    response=${response,,}  # tolower
+    if [[ "$response" =~ ^(yes|y)$ ]]
+    then
+        echo "Okay! Adding $i!"
+        zfs create -o canmount=on rpool_$INST_UUID/$INST_ID/DATA/default/$i
+    else
+        echo "Skipping $i... :("
+    fi
+
+done
