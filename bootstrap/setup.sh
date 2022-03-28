@@ -53,3 +53,9 @@ set_partition_size INST_PARTSIZE_SWAP "swap" $SYSTEM_MEM
 
 # Root pool size, use all remaining disk space if not set.
 set_partition_size INST_PARTSIZE_RPOOL "root pool"
+
+
+# Run the partition, system configuration, and system installation
+source partition.sh
+source system-config.sh
+source system-install.sh
