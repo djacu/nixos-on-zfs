@@ -23,7 +23,7 @@ for i in ${DISK}; do
     # Zap (destroy) the GPT and MBR data structures and then exit.
     sgdisk --zap-all $i
     # ESP partition
-    sgdisk -n 1:1M:+${INST_PARTSIZE_ESP}G -t1:EF00 $i
+    sgdisk -n 1:0:+${INST_PARTSIZE_ESP}G -t1:EF00 $i
     # Boot pool partition
     sgdisk -n 2:0:+${INST_PARTSIZE_BPOOL}G -t2:BE00 $i
     # Swap partition if specified
@@ -36,8 +36,6 @@ for i in ${DISK}; do
     else
         sgdisk -n 3:0:+${INST_PARTSIZE_RPOOL}G -t3:BF00 $i
     fi
-    # Legacy boot
-    sgdisk -a1 -n 5:24K:+1000K -t5:EF02 $i
 done
 
 
@@ -51,7 +49,6 @@ if [ $disk_num -gt 1 ]; then
 fi
 
 zpool create \
-    -o compatibility=grub2 \
     -o ashift=13 \
     -o autotrim=on \
     -O acltype=posixacl \
