@@ -68,8 +68,7 @@ systemd-machine-id-setup --print > /mnt/state/etc/machine-id
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
   systemd.services.zfs-mount.enable = false;
   environment.etc."machine-id".source = "/state/etc/machine-id";
-  environment.etc."zfs/zpool.cache".source
-    = "/state/etc/zfs/zpool.cache";
+  environment.etc."zfs/zpool.cache".source = "/state/etc/zfs/zpool.cache";
   boot.loader.efi.efiSysMountPoint = "/boot/efis/${INST_PRIMARY_DISK##*/}-part1";
 EOF
 
@@ -77,13 +76,14 @@ EOF
 # Configure GRUB boot loader for both legacy boot and UEFI
 sed -i '/boot.loader/d' /mnt/etc/nixos/configuration.nix
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
+  boot.loader.efi.canTouchEfiVariables = false;
+  ##if UEFI firmware can detect entries
+  #boot.loader.efi.canTouchEfiVariables = true;
+
   boot.loader = {
     generationsDir.copyKernels = true;
     ##for problematic UEFI firmware
     grub.efiInstallAsRemovable = true;
-    efi.canTouchEfiVariables = false;
-    ##if UEFI firmware can detect entries
-    #efi.canTouchEfiVariables = true;
     grub.enable = true;
     grub.version = 2;
     grub.copyKernels = true;
