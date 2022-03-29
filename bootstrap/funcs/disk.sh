@@ -1,7 +1,10 @@
 #!/bin/bash
 
-this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$this_dir/math.sh"
+function source_imports () {
+    local this_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+    source "$this_dir/math.sh"
+}
+source_imports
 
 
 # Returns a newline seperate string of all the disks devices by ID
