@@ -42,7 +42,7 @@ zfs snapshot -r bpool_$INST_UUID/$INST_ID@install
 
 # Unmount EFI system partition
 umount /mnt/boot/efis/*
-umount /mnt/boot/efi
+umount -R /mnt
 
 # Export pools
 zpool export bpool_$INST_UUID
