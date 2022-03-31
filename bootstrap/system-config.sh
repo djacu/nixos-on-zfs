@@ -78,4 +78,5 @@ sed -i '/boot.loader/d' /mnt/etc/nixos/configuration.nix
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.enable = true;
+  boot.loader.systemd-boot.consoleMode = "2";
 EOF
