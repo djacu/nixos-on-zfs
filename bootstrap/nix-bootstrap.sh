@@ -123,6 +123,9 @@ tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
   };
 EOF
 
+# Generate password hash
+INST_ROOT_PASSWD=$(mkpasswd -m SHA-512 -s)
+
 # Declare initialHashedPassword for root user
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
   users.users.root.initialHashedPassword = "${INST_ROOT_PASSWD}";
