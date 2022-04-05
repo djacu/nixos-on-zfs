@@ -39,6 +39,8 @@ for i in ${DISK}; do
     # Legacy boot
     sgdisk -a1 -n 5:24K:+1000K -t5:EF02 $i
 done
+sync
+sleep 3
 
 
 # Create the boot pool
