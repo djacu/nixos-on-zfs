@@ -108,57 +108,49 @@ echo poolpass | zfs create \
 
 
 ### -------- MOSTLY SAME -------- ###
-## reordered to match my script
-# This part is exactly this same
+## put back to match the original ne9z script
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID/BOOT
+zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
+zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/DATA
 zfs create -o mountpoint=/boot -o canmount=noauto bpool_$INST_UUID/$INST_ID/BOOT/default
+zfs create -o mountpoint=/ -o canmount=off rpool_$INST_UUID/$INST_ID/DATA/default
+zfs create -o mountpoint=/ -o canmount=off rpool_$INST_UUID/$INST_ID/DATA/local
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
+zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 zfs mount bpool_$INST_UUID/$INST_ID/BOOT/default
 
-# This part is exactly this same
-zfs create -o canmount=off -o mountpoint=none   rpool_$INST_UUID/$INST_ID/DATA
-zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/local
 for i in {nix,}; do
-    zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i
+    zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i;
 done
 
-# Other than the extra datasets not created, this part is exactly the same
-zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/default
-# DOES NOT HAVE ANY OF THE DATASETS FOR {usr,var,var/lib} AS SHOWN IN THE GUIDE
-# ONE OF THE FAILED UMOUNT POINTS IS /mnt/var/spool BUT THAT IS AFTER GRUB FAILS TO INSTALL
 
-# This part is exactly this same
-zfs create -o canmount=on                       rpool_$INST_UUID/$INST_ID/DATA/default/state
+zfs create -o canmount=on rpool_$INST_UUID/$INST_ID/DATA/default/state
 for i in {/etc/nixos,/etc/cryptkey.d}; do
   mkdir -p /mnt/state/$i /mnt/$i
   mount -o bind /mnt/state/$i /mnt/$i
 done
 
+
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
+zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
+
+
 # NOT PRESENT IN MY SCRIPT
-# HOME IS CREATED WITH root, srv, etc, BUT HOME/EMPTY IS NOT AND NO SNAPSHOT IS TAKEN
 for i in {home,home/empty}; do
     zfs create -o canmount=on rpool_$INST_UUID/$INST_ID/DATA/default/$i;
 done
 zfs snapshot rpool_$INST_UUID/$INST_ID/DATA/default/home/empty@start
 
-# This part is exactly this same
-zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
-zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
-zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 
-# This part is exactly this same
-zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
-zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
-
-
-# This part is exactly this same
 for i in ${DISK}; do
     mkfs.vfat -n EFI ${i}-part1
     mkdir -p /mnt/boot/efis/${i##*/}-part1
     mount -t vfat ${i}-part1 /mnt/boot/efis/${i##*/}-part1
 done
 
-# DOES NOT HAVE ANY OF THE DATASETS FOR {var/games,var/www,var/lib/docker,var/lib/nfs} AS SHOWN IN THE GUIDE
+# DOES NOT HAVE ANY OF THE DATASETS FOR {usr,var,var/lib} AS SHOWN IN THE GUIDE
+# ONE OF THE FAILED UMOUNT POINTS IS /mnt/var/spool BUT THAT IS AFTER GRUB FAILS TO INSTALL
 
 
 
