@@ -2,7 +2,7 @@
 
 # BEGINNING OF MY setup.sh script
 
-DISK=/dev/disk/by-id/ata-TOSHIBA_Q300._46DB5111K1MU
+DISK=/dev/disk/by-id/nvme-SKHynix_HFS512GDE9X081N_CD13N445112003740
 for i in ${DISK}; do blkdiscard -f $i & done
 wait
 INST_UUID=$(dd if=/dev/urandom bs=1 count=100 2>/dev/null | tr -dc 'a-z0-9' | cut -c-6)
