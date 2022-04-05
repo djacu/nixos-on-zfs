@@ -17,99 +17,161 @@ INST_PARTSIZE_SWAP=8
 
 # BEGINNING OF MY partition.sh script
 
+### -------- ALL THE SAME -------- ###
 for i in ${DISK}; do
     sgdisk --zap-all $i
     sgdisk -n 1:1M:+${INST_PARTSIZE_ESP}G -t1:EF00 $i
     sgdisk -n 2:0:+${INST_PARTSIZE_BPOOL}G -t2:BE00 $i
     if [ "${INST_PARTSIZE_SWAP}" != "" ]; then
-        sgdisk -n4:0:+${INST_PARTSIZE_SWAP}G -t4:8200 $i;
+        sgdisk -n 4:0:+${INST_PARTSIZE_SWAP}G -t4:8200 $i
     fi
     if [ "${INST_PARTSIZE_RPOOL}" = "" ]; then
-        sgdisk -n3:0:0 -t3:BF00 $i;
+        sgdisk -n 3:0:0   -t3:BF00 $i
     else
-        sgdisk -n3:0:+${INST_PARTSIZE_RPOOL}G -t3:BF00 $i;
+        sgdisk -n 3:0:+${INST_PARTSIZE_RPOOL}G -t3:BF00 $i;
     fi
-    sgdisk -a1 -n5:24K:+1000K -t5:EF02 $i
+    sgdisk -a1 -n 5:24K:+1000K -t5:EF02 $i
 done
 sync # NOT PRESENT IN MY SCRIPT
 sleep 3 # NOT PRESENT IN MY SCRIPT
 
 
-disk_num=0
+### -------- ALL THE SAME -------- ###
+disk_num=0;
 for i in $DISK; do
-    disk_num=$(($disk_num + 1));
+    disk_num=$(( $disk_num + 1 ));
 done
 if [ $disk_num -gt 1 ]; then
     INST_VDEV_BPOOL=mirror;
 fi
 
 
-zpool create -f -o compatibility=grub2 -o ashift=12 -o autotrim=on -O acltype=posixacl -O canmount=off -O compression=lz4 -O devices=off -O normalization=formD -O atime=off -O xattr=sa -O mountpoint=/boot -R /mnt bpool_$INST_UUID $INST_VDEV_BPOOL $(for i in ${DISK}; do
-  printf "$i-part2 "
-done)
+### -------- NOT SAME -------- ###
+## -f flag is used (not in mine)
+## ashift=12 (13 in mine)
+## atime=off (left unset default [on] in mine)
+## relatime unset (on in mine)
+zpool create -f \
+    -o compatibility=grub2 \
+    -o ashift=12 \
+    -o autotrim=on \
+    -O acltype=posixacl \
+    -O canmount=off \
+    -O compression=lz4 \
+    -O devices=off \
+    -O normalization=formD \
+    -O atime=off \
+    -O xattr=sa \
+    -O mountpoint=/boot \
+    -R /mnt \
+    bpool_$INST_UUID \
+    $INST_VDEV_BPOOL \
+    $(for i in ${DISK}; do
+        printf "$i-part2 ";
+    done)
 
 
-zpool create -f -o ashift=12 -o autotrim=on -R /mnt -O acltype=posixacl -O canmount=off -O compression=zstd -O dnodesize=auto -O normalization=formD -O atime=off -O xattr=sa -O mountpoint=/ rpool_$INST_UUID $INST_VDEV $(for i in ${DISK}; do
-  printf "$i-part3 "
-done)
+### -------- NOT SAME -------- ###
+## -f flag is used (not in mine)
+## ashift=12 (13 in mine)
+## atime=off (left unset default [on] in mine)
+## relatime unset (on in mine)
+## encryption not used here, keylocation and keyformat also not used
+zpool create -f \
+    -o ashift=12 \
+    -o autotrim=on \
+    -R /mnt \
+    -O acltype=posixacl \
+    -O canmount=off \
+    -O compression=zstd \
+    -O dnodesize=auto \
+    -O normalization=formD \
+    -O atime=off \
+    -O xattr=sa \
+    -O mountpoint=/ \
+    rpool_$INST_UUID \
+    $INST_VDEV \
+    $(for i in ${DISK}; do
+        printf "$i-part3 ";
+    done)
 
 
-echo poolpass | zfs create -o canmount=off -o mountpoint=none -o encryption=aes-256-gcm -o keylocation=prompt -o keyformat=passphrase rpool_$INST_UUID/$INST_ID
+### -------- MOSTLY SAME -------- ###
+## passing in encryption password
+echo poolpass | zfs create \
+    -o canmount=off \
+    -o mountpoint=none \
+    -o encryption=aes-256-gcm \
+    -o keylocation=prompt \
+    -o keyformat=passphrase \
+    rpool_$INST_UUID/$INST_ID
 
 
+### -------- MOSTLY SAME -------- ###
+## reordered to match my script
+# This part is exactly this same
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID/BOOT
-zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
-zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/DATA
 zfs create -o mountpoint=/boot -o canmount=noauto bpool_$INST_UUID/$INST_ID/BOOT/default
-zfs create -o mountpoint=/ -o canmount=off rpool_$INST_UUID/$INST_ID/DATA/default
-zfs create -o mountpoint=/ -o canmount=off rpool_$INST_UUID/$INST_ID/DATA/local
-zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
-zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 zfs mount bpool_$INST_UUID/$INST_ID/BOOT/default
 
+# This part is exactly this same
+zfs create -o canmount=off -o mountpoint=none   rpool_$INST_UUID/$INST_ID/DATA
+zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/local
 for i in {nix,}; do
-    zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i;
+    zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i
 done
 
+# Other than the extra datasets not created, this part is exactly the same
+zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/default
+# DOES NOT HAVE ANY OF THE DATASETS FOR {usr,var,var/lib} AS SHOWN IN THE GUIDE
+# ONE OF THE FAILED UMOUNT POINTS IS /mnt/var/spool BUT THAT IS AFTER GRUB FAILS TO INSTALL
 
-zfs create -o canmount=on rpool_$INST_UUID/$INST_ID/DATA/default/state
+# This part is exactly this same
+zfs create -o canmount=on                       rpool_$INST_UUID/$INST_ID/DATA/default/state
 for i in {/etc/nixos,/etc/cryptkey.d}; do
   mkdir -p /mnt/state/$i /mnt/$i
   mount -o bind /mnt/state/$i /mnt/$i
 done
 
-
-zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
-zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
-
-
 # NOT PRESENT IN MY SCRIPT
+# HOME IS CREATED WITH root, srv, etc, BUT HOME/EMPTY IS NOT AND NO SNAPSHOT IS TAKEN
 for i in {home,home/empty}; do
     zfs create -o canmount=on rpool_$INST_UUID/$INST_ID/DATA/default/$i;
 done
 zfs snapshot rpool_$INST_UUID/$INST_ID/DATA/default/home/empty@start
 
+# This part is exactly this same
+zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
+zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 
+# This part is exactly this same
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
+zfs snapshot rpool_$INST_UUID/$INST_ID/ROOT/empty@start
+
+
+# This part is exactly this same
 for i in ${DISK}; do
     mkfs.vfat -n EFI ${i}-part1
     mkdir -p /mnt/boot/efis/${i##*/}-part1
     mount -t vfat ${i}-part1 /mnt/boot/efis/${i##*/}-part1
 done
 
-# DOES NOT HAVE ANY OF THE DATASETS FOR {usr,var,var/lib} AS SHOWN IN THE GUIDE
-# ONE OF THE FAILED UMOUNT POINTS IS /mnt/var/spool BUT THAT IS AFTER GRUB FAILS TO INSTALL
+# DOES NOT HAVE ANY OF THE DATASETS FOR {var/games,var/www,var/lib/docker,var/lib/nfs} AS SHOWN IN THE GUIDE
 
 
 
 # BEGINNING OF MY system-config.sh script
 
+# This part is exactly this same
 nixos-generate-config --root /mnt
 sed -i "s|./hardware-configuration.nix|./hardware-configuration-zfs.nix ./${INST_CONFIG_FILE}|g" /mnt/etc/nixos/configuration.nix
 # backup, prevent being overwritten by nixos-generate-config
 mv /mnt/etc/nixos/hardware-configuration.nix /mnt/etc/nixos/hardware-configuration-zfs.nix
 
 
+# This part is exactly this same
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
 { config, pkgs, ... }:
 
@@ -119,13 +181,17 @@ tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
 EOF
 
 
-sed -i 's|fsType = "zfs";|fsType = "zfs"; options = [ "zfsutil" "X-mount.mkdir" ];|g' /mnt/etc/nixos/hardware-configuration-zfs.nix
-sed -i 's|fsType = "vfat";|fsType = "vfat"; options = [ "x-systemd.idle-timeout=1min" "x-systemd.automount" "noauto" ];|g' /mnt/etc/nixos/hardware-configuration-zfs.nix
+# This part is mostly this same - reformatted with \
+sed -i 's|fsType = "zfs";|fsType = "zfs"; options = [ "zfsutil" "X-mount.mkdir" ];|g' \
+/mnt/etc/nixos/hardware-configuration-zfs.nix
+sed -i 's|fsType = "vfat";|fsType = "vfat"; options = [ "x-systemd.idle-timeout=1min" "x-systemd.automount" "noauto" ];|g' \
+/mnt/etc/nixos/hardware-configuration-zfs.nix
 
 
 # MISSING THE LINE FOR boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
 
 
+# This part is exactly this same
 mkdir -p /mnt/state/etc/zfs/
 rm -f /mnt/state/etc/zfs/zpool.cache
 touch /mnt/state/etc/zfs/zpool.cache
@@ -133,6 +199,7 @@ chmod a-w /mnt/state/etc/zfs/zpool.cache
 chattr +i /mnt/state/etc/zfs/zpool.cache
 
 
+# This part is mostly this same - white space is a little different but shouldn't matter
 if [ "${INST_PARTSIZE_SWAP}" != "" ]; then
   sed -i '/swapDevices/d' /mnt/etc/nixos/hardware-configuration-zfs.nix
   tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
@@ -149,6 +216,7 @@ EOF
 fi
 
 
+# This part is mostly this same
 mkdir -p /mnt/state/etc/{ssh,zfs}
 systemd-machine-id-setup --print >/mnt/state/etc/machine-id
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
@@ -160,6 +228,8 @@ tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
 EOF
 
 
+# Not the same
+# boot.loader.efi.canTouchEfiVariables is not set but default is false
 sed -i '/boot.loader/d' /mnt/etc/nixos/configuration.nix
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
 	  boot.loader = {
@@ -183,10 +253,12 @@ tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
 	       export ESP_MIRROR=$(mktemp -d -p /tmp)
 EOF
 
+# This part is exactly this same
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
        cp -r /boot/efis/${INST_PRIMARY_DISK##*/}-part1/EFI \$ESP_MIRROR
 EOF
 
+# This part is mostly this same - white space is a little different but shouldn't matter
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
 	       for i in /boot/efis/*; do
 	        cp -r $ESP_MIRROR/EFI $i
@@ -196,6 +268,7 @@ tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<-'EOF'
 	    grub.devices = [
 EOF
 
+# This part is mostly this same - for loop is inline but shouldn't matter
 for i in $DISK; do printf "      \"$i\"\n" >>/mnt/etc/nixos/${INST_CONFIG_FILE}; done
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
     ];
@@ -218,7 +291,16 @@ EOF
 tee -a /mnt/etc/nixos/${INST_CONFIG_FILE} <<EOF
 }
 EOF
+
+## NO SNAPSHOTS TAKEN BEFORE INSTALL
+
 nixos-install -v --show-trace --no-root-passwd --root /mnt
+
+## NO SNAPSHOTS TAKEN AFTER INSTALL
+
 umount /mnt/boot/efis/*
+
+## EXPORTS ALL RATHER THAN SPECIFIC POOLS
 zpool export -a
+
 echo $?
