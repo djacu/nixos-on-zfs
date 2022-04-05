@@ -121,19 +121,19 @@ for i in {nix,}; do
     zfs create -o canmount=on -o mountpoint=/$i rpool_$INST_UUID/$INST_ID/DATA/local/$i
 done
 
-# Create user datasets / shared datasets / persistent datasets
-zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/default
+# # Create user datasets / shared datasets / persistent datasets
+# zfs create -o mountpoint=/ -o canmount=off      rpool_$INST_UUID/$INST_ID/DATA/default
 
-for i in {usr,var,var/lib};
-do
-    zfs create -o canmount=off                  rpool_$INST_UUID/$INST_ID/DATA/default/$i
-done
+# for i in {usr,var,var/lib};
+# do
+#     zfs create -o canmount=off                  rpool_$INST_UUID/$INST_ID/DATA/default/$i
+# done
 
-for i in {home,root,srv,usr/local,var/log,var/spool};
-do
-    zfs create -o canmount=on                   rpool_$INST_UUID/$INST_ID/DATA/default/$i
-done
-chmod 750 /mnt/root
+# for i in {home,root,srv,usr/local,var/log,var/spool};
+# do
+#     zfs create -o canmount=on                   rpool_$INST_UUID/$INST_ID/DATA/default/$i
+# done
+# chmod 750 /mnt/root
 
 # Create a state dataset for saving mutable data in case an immutable file system is used
 zfs create -o canmount=on                       rpool_$INST_UUID/$INST_ID/DATA/default/state
