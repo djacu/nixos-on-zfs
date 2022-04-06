@@ -129,3 +129,5 @@ Select a disk by number. Return 0 or nothing to finish:
 ```
 
 Finally, `select_only_disks_by_idx` takes the disk number user input, cycling through all the lines from the output of `get_only_disks`, and returning the `/dev/disk/by-id/` path for the device when it finds the correct disk.
+
+After the user is satisfied with the disk selection, the script continues on similar to how it is laid out in the OpenZFS documentation. Partitions are created on the disk(s) for boot, root, esp, and swap. Zpools and datasets are created and mounted to the partitions. A set of nix configuration scripts are generated and NixOS is installed.
