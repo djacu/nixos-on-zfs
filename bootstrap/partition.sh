@@ -105,6 +105,12 @@ zfs create \
     rpool_$INST_UUID/$INST_ID
 
 
+# Create ROOT datasets
+zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
+zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
+zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
+
+
 # Create BOOT datasets
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID
 zfs create -o canmount=off -o mountpoint=none bpool_$INST_UUID/$INST_ID/BOOT
@@ -142,11 +148,6 @@ for i in {/etc/nixos,/etc/cryptkey.d}; do
   mount -o bind /mnt/state/$i /mnt/$i
 done
 
-
-# Create ROOT datasets
-zfs create -o canmount=off -o mountpoint=none rpool_$INST_UUID/$INST_ID/ROOT
-zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/default
-zfs mount rpool_$INST_UUID/$INST_ID/ROOT/default
 
 # Create an `empty` dataset to use as an original snapshot for an immutable file system.
 zfs create -o mountpoint=/ -o canmount=noauto rpool_$INST_UUID/$INST_ID/ROOT/empty
