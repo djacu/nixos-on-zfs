@@ -1,10 +1,10 @@
-from pybootstrap import partition
-from pybootstrap import prepare
-
+from pybootstrap import configure, install, partition, prepare
 
 def main():
     config = prepare.prepare()
     partition.partition(config=config)
+    configure.configure(config=config)
+    install.install(config=config)
 
 
 if __name__ == "__main__":
