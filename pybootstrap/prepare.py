@@ -3,6 +3,7 @@ import glob
 import json
 import math
 import os
+from pathlib import Path
 import random
 import string
 import subprocess
@@ -16,7 +17,6 @@ class ZfsConfig(NamedTuple):
     '''Information about the ZFS pool topology and disks.'''
     pool_uuid: str
     os_id: str
-    fs_config_name: str
     disks: List[str]
     primary_disk: str
     topology: str
@@ -30,10 +30,20 @@ class PartitionConfig(NamedTuple):
     root: str
 
 
+class NixOSConfig(NamedTuple):
+    '''Information about NixOS configuration.'''
+    config: str
+    hw_old: str
+    hw: str
+    path: Path
+    zfs: str
+
+
 class ZfsSystemConfig(NamedTuple):
     '''A system configuration to build NixOS root on ZFS.'''
     zfs: ZfsConfig
     part: PartitionConfig
+    nixos: NixOSConfig
 
 
 class BlockDevice(NamedTuple):
@@ -66,7 +76,6 @@ def prepare() -> ZfsSystemConfig:
     zfs_config = ZfsConfig(
         pool_uuid=random_str(num=6),
         os_id='nixos',
-        fs_config_name='zfs.nix',
         disks=disks,
         primary_disk=primary_disk,
         topology=get_topology()
@@ -80,7 +89,17 @@ def prepare() -> ZfsSystemConfig:
         root=get_partition_size(name='ROOT')
     )
 
-    sys_config = ZfsSystemConfig(zfs=zfs_config, part=part_config)
+    nixos_config = NixOSConfig(
+        config='configuration.nix',
+        hw_old='hardware-configuration.nix',
+        hw='hardware-configuration-zfs.nix',
+        path=Path('/mnt/etc/nixos'),
+        zfs='zfs.nix'
+    )
+
+    sys_config = ZfsSystemConfig(zfs=zfs_config,
+                                 part=part_config,
+                                 nixos=nixos_config)
     return sys_config
 
 
