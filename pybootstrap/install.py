@@ -1,4 +1,5 @@
 '''A module for installing NixOS root on ZFS.'''
+from glob import glob
 import subprocess
 
 from pybootstrap.prepare import ZfsSystemConfig
@@ -24,7 +25,9 @@ def install(config: ZfsSystemConfig):
     subprocess.run(f'zfs snapshot -r {bpool_nix}@install'.split(),
                    check=True)
 
-    subprocess.run('umount /mnt/boot/efis/*'.split(), check=True)
+    # efis = ' '.join(glob.glob('/mnt/boot/efis/*'))
+    # subprocess.run(f'umount {efis}'.split(), check=True)
+    subprocess.run('umount /mnt/boot/efis/*', shell=True, check=True)
 
     subprocess.run(f'zpool export {bpool_id}'.split(), check=True)
     subprocess.run(f'zpool export {rpool_id}'.split(), check=True)

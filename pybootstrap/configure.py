@@ -14,6 +14,7 @@ def configure(config: ZfsSystemConfig):
     generate_system_config()
     update_config_imports(config=config)
     remove_systemd_boot_refs(config=config)
+    update_hardware_config(config=config)
     update_zfs_nix_file(config=config)
 
 
@@ -73,7 +74,7 @@ def update_hardware_config(config: ZfsSystemConfig):
     newlines = list(map(hardware_config_replace, lines))
 
     if config.part.swap not in ('', '0'):
-        newlines = [line for line in lines if 'swapDevices' not in line]
+        newlines = [line for line in newlines if 'swapDevices' not in line]
 
     with open(new_path, 'w', encoding='UTF-8') as file:
         file.writelines(newlines)
@@ -137,8 +138,11 @@ def zfs_nix_replace(
     line = line.replace('HOST_ID', host_id)
     line = line.replace('DEV_NODES', str(Path(config.zfs.primary_disk).parent))
     line = line.replace('PRIMARY_DISK', str(Path(config.zfs.primary_disk).name))
-    disks = '\n      ' + '\n      '.join(config.zfs.disks) + '\n    '
+
+    disks = [f'"{disk}"' for disk in config.zfs.disks]
+    disks = '\n      ' + '\n      '.join(disks) + '\n    '
     line = line.replace('GRUB_DEVICES', disks)
+
     line = line.replace('INITIAL_HASHED_PW', init_hash)
     return line
 
@@ -160,7 +164,7 @@ def get_initial_hashed_pw() -> str:
         check=True
     )
 
-    return process.stdout
+    return process.stdout.strip()
 
 
 def get_machine_id() -> str:
