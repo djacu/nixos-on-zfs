@@ -1,5 +1,5 @@
 {
-  description = "An applicatoin to assist in installing NixOS on ZFS.";
+  description = "An application to assist in installing NixOS on ZFS.";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
