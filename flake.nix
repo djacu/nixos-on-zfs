@@ -19,24 +19,22 @@
           inherit system;
         };
 
-        pyBootstrap = pkgs.poetry2nix.mkPoetryPackages {
+        pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
+          projectDir = ./.;
+          python = pkgs.python310;
+          editablePackageSources = {
+            pybootstrap = ./pybootstrap;
+          };
+        };
+
+        pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
           python = pkgs.python310;
         };
+      in {
+        packages.default = pybootstrapEnv;
 
-        pyBootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
-          projectDir = ./.;
-          python = pkgs.python310;
-        };
-      in
-      {
-        packages.default = pyBootstrap.python;
-        packages = {
-          pyBootStrap = pyBootstrap.python;
-          inherit pyBootstrapApp;
-        };
-
-        apps.default.program = "${pyBootstrapApp}/bin/pybootstrap";
+        apps.default.program = "${pybootstrapApp}/bin/pybootstrap";
         apps.default.type = "app";
 
         devShells.default = pkgs.mkShell {
