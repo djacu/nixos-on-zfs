@@ -15,8 +15,12 @@
   }:
     flake-utils.lib.eachSystem [flake-utils.lib.system.x86_64-linux] (
       system: let
+        overlays = [
+          poetry2nix.overlay
+        ];
+
         pkgs = import nixpkgs {
-          inherit system;
+          inherit overlays system;
         };
 
         pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
