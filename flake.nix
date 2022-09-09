@@ -3,6 +3,8 @@
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs.flake-compat.url = "github:edolstra/flake-compat";
+  inputs.flake-compat.flake = false;
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
   inputs.poetry2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
