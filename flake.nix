@@ -1,6 +1,8 @@
 {
   description = "An application to assist in installing NixOS on ZFS.";
 
+  nixConfig.bash-prompt = "\[nix-develop\]$ ";
+
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.flake-compat.url = "github:edolstra/flake-compat";
@@ -34,6 +36,7 @@
           src = self;
           hooks = {
             alejandra.enable = true;
+            black.enable = true;
           };
         };
 
