@@ -1,8 +1,8 @@
 """A module for configure NixOS root on ZFS nix files."""
-from functools import partial
-from pathlib import Path
 import re
 import subprocess
+from functools import partial
+from pathlib import Path
 
 import questionary
 

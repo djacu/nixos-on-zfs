@@ -1,12 +1,12 @@
 """A module for partitioning for zpool and zfs dataset creation."""
-from pathlib import Path
 import subprocess
+from pathlib import Path
 from typing import NamedTuple
 
 import questionary
 
 from pybootstrap.prepare import ZfsSystemConfig
-from pybootstrap.zfs import ZDataset, ZPool, ZPoolProps, ZfsProps
+from pybootstrap.zfs import ZDataset, ZfsProps, ZPool, ZPoolProps
 
 
 class SGDisk(NamedTuple):

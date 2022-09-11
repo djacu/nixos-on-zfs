@@ -1,6 +1,6 @@
 """A module for installing NixOS root on ZFS."""
-from glob import glob
 import subprocess
+from glob import glob
 
 from pybootstrap.prepare import ZfsSystemConfig
 

@@ -3,10 +3,10 @@ import glob
 import json
 import math
 import os
-from pathlib import Path
 import random
 import string
 import subprocess
+from pathlib import Path
 from time import sleep
 from typing import List, NamedTuple, Optional, Sequence
 

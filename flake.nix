@@ -37,6 +37,7 @@
           hooks = {
             alejandra.enable = true;
             black.enable = true;
+            isort.enable = true;
           };
         };
 
