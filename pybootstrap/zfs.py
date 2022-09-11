@@ -1,4 +1,4 @@
-'''Modules for building OpenZFS commands.'''
+"""Modules for building OpenZFS commands."""
 from abc import ABC
 from dataclasses import dataclass, field, fields
 from pathlib import Path
@@ -7,27 +7,27 @@ from typing import Any, List, Optional
 
 @dataclass(frozen=True)
 class ZfsOptionBase(ABC):
-    '''Base class for ZFS option like Pool ZFS Properties.'''
-    prefix: str = field(init=False, default='')
+    """Base class for ZFS option like Pool ZFS Properties."""
+
+    prefix: str = field(init=False, default="")
 
     def _attr_filter(self) -> List[str]:
-        field_names = [f.name for f in fields(self) if f.name != 'prefix']
-        return list(filter(lambda f: getattr(self, f) is not None,
-                           field_names))
+        field_names = [f.name for f in fields(self) if f.name != "prefix"]
+        return list(filter(lambda f: getattr(self, f) is not None, field_names))
 
     def _prop(self, attr: str) -> str:
-        return f'-{self.prefix} {attr}={getattr(self, attr)}'
+        return f"-{self.prefix} {attr}={getattr(self, attr)}"
 
     def _valid_attr(self, attr: str, allowed: list[Any]):
         attr_val = getattr(self, attr)
         if attr_val is not None and attr_val not in allowed:
             bad_val = getattr(self, attr)
-            raise ValueError(f'Attribute {attr} ({bad_val}) not in {allowed}.')
+            raise ValueError(f"Attribute {attr} ({bad_val}) not in {allowed}.")
 
 
 @dataclass(frozen=True)
 class ZPoolProps(ZfsOptionBase):
-    '''Properties of ZFS storage pools.
+    """Properties of ZFS storage pools.
 
     Attributes
     ----------
@@ -81,30 +81,31 @@ class ZPoolProps(ZfsOptionBase):
             features are read from those files, separated by whitespace
             and/or commas. Only features present in all files may be
             enabled.
-    '''
-    prefix: str = field(init=False, default='o')
+    """
+
+    prefix: str = field(init=False, default="o")
     altroot: Optional[Path] = None
     ashift: int = 0
-    autotrim: str = 'off'
+    autotrim: str = "off"
     cachefile: Optional[Path | str] = None
-    compatibility: str = 'off'
+    compatibility: str = "off"
 
     def __post_init__(self):
         if self.altroot is not None and self.cachefile is None:
             # required for frozen datasets
-            super().__setattr__('cachefile', 'none')
+            super().__setattr__("cachefile", "none")
 
-        self._valid_attr('ashift', [0] + list(range(9, 17)))
-        self._valid_attr('autotrim', ['on', 'off'])
+        self._valid_attr("ashift", [0] + list(range(9, 17)))
+        self._valid_attr("autotrim", ["on", "off"])
 
     def __str__(self):
-        return ' '.join(map(self._prop, self._attr_filter()))
+        return " ".join(map(self._prop, self._attr_filter()))
 
 
 @dataclass(frozen=True)
 class ZfsProps(ZfsOptionBase):
     # pylint: disable=too-many-instance-attributes
-    '''Native properties of ZFS datasets.
+    """Native properties of ZFS datasets.
 
     Attributes
     ----------
@@ -235,7 +236,7 @@ class ZfsProps(ZfsOptionBase):
             `keylocation` must also be `None`. If `encryption` is any
             other valid option, then the other two options must also be
             specified.
-    '''
+    """
     prefix: str
     atime: Optional[str] = None
     acltype: Optional[str] = None
@@ -252,84 +253,108 @@ class ZfsProps(ZfsOptionBase):
     xattr: Optional[str] = None
 
     def __post_init__(self):
-        self._valid_attr('atime', ('on', 'off'))
-        self._valid_attr('acltype', ('off', 'noacl', 'nfsv4', 'posix',
-                                    'posixacl'))
-        self._valid_attr('canmount', ('on', 'off', 'noauto'))
-        self._valid_attr('compression', ('on', 'off', 'gzip', 'lz4', 'lzjb',
-                                        'zle', 'zstd', 'zstd-fast'))
-        self._valid_attr('devices', ('on', 'off'))
-        self._valid_attr('dnodesize', ('legacy', 'auto', '1k', '2k', '4k', '8k',
-                                      '16k'))
-        self._valid_attr('encryption', ('off', 'on', 'aes-128-ccm',
-                                        'aes-192-ccm', 'aes-256-ccm',
-                                        'aes-128-gcm', 'aes-192-gcm',
-                                        'aes-256-gcm'))
-        self._valid_attr('keyformat', ('passphrase',))
-        self._valid_attr('keylocation', ('prompt',))
+        self._valid_attr("atime", ("on", "off"))
+        self._valid_attr("acltype", ("off", "noacl", "nfsv4", "posix", "posixacl"))
+        self._valid_attr("canmount", ("on", "off", "noauto"))
+        self._valid_attr(
+            "compression",
+            ("on", "off", "gzip", "lz4", "lzjb", "zle", "zstd", "zstd-fast"),
+        )
+        self._valid_attr("devices", ("on", "off"))
+        self._valid_attr("dnodesize", ("legacy", "auto", "1k", "2k", "4k", "8k", "16k"))
+        self._valid_attr(
+            "encryption",
+            (
+                "off",
+                "on",
+                "aes-128-ccm",
+                "aes-192-ccm",
+                "aes-256-ccm",
+                "aes-128-gcm",
+                "aes-192-gcm",
+                "aes-256-gcm",
+            ),
+        )
+        self._valid_attr("keyformat", ("passphrase",))
+        self._valid_attr("keylocation", ("prompt",))
         self._valid_encryption()
         self._valid_mountpoint()
-        self._valid_attr('normalization', ('none', 'formC', 'formD', 'formKC',
-                                          'formKD'))
+        self._valid_attr(
+            "normalization", ("none", "formC", "formD", "formKC", "formKD")
+        )
         self._valid_relatime()
-        self._valid_attr('xattr', ('on', 'off', 'sa'))
+        self._valid_attr("xattr", ("on", "off", "sa"))
 
     def _valid_encryption(self):
-        self._valid_attr('encryption', ('off', 'on', 'aes-128-ccm',
-                                        'aes-192-ccm', 'aes-256-ccm',
-                                        'aes-128-gcm', 'aes-192-gcm',
-                                        'aes-256-gcm'))
+        self._valid_attr(
+            "encryption",
+            (
+                "off",
+                "on",
+                "aes-128-ccm",
+                "aes-192-ccm",
+                "aes-256-ccm",
+                "aes-128-gcm",
+                "aes-192-gcm",
+                "aes-256-gcm",
+            ),
+        )
 
-        encrypt_off = self.encryption == 'off' or self.encryption is None
+        encrypt_off = self.encryption == "off" or self.encryption is None
         keyformat_unset = self.keyformat is None
         keylocation_unset = self.keylocation is None
 
         if self._xor_three(encrypt_off, keyformat_unset, keylocation_unset):
-            raise ValueError("encryption, keyformat, and keylocation must all"
-                             " be None (or encryption='off') or all set to"
-                             " valid values (with encryption not being 'off').")
+            raise ValueError(
+                "encryption, keyformat, and keylocation must all"
+                " be None (or encryption='off') or all set to"
+                " valid values (with encryption not being 'off')."
+            )
 
     def _xor_three(self, a, b, c):
         return (a ^ b) or (a ^ c)
 
     def _valid_mountpoint(self):
         if isinstance(self.mountpoint, str):
-            self._valid_attr('mountpoint', ('none', 'legacy'))
+            self._valid_attr("mountpoint", ("none", "legacy"))
 
-        if (not isinstance(self.mountpoint, str)
+        if (
+            not isinstance(self.mountpoint, str)
             and not isinstance(self.mountpoint, Path)
-            and self.mountpoint is not None):
-            err_str = f'Unexpected type {type(self.mountpoint)} for attribute `mountpoint`.'
+            and self.mountpoint is not None
+        ):
+            err_str = (
+                f"Unexpected type {type(self.mountpoint)} for attribute `mountpoint`."
+            )
             raise ValueError(err_str)
 
     def _valid_relatime(self):
-        self._valid_attr('relatime', ('on', 'off'))
-        if self.atime == 'off' and not self.relatime == 'off':
-            raise ValueError('`relatime` must be off if `atime` is off.')
+        self._valid_attr("relatime", ("on", "off"))
+        if self.atime == "off" and not self.relatime == "off":
+            raise ValueError("`relatime` must be off if `atime` is off.")
 
     def __str__(self):
-        return ' '.join(map(self._prop, self._attr_filter()))
+        return " ".join(map(self._prop, self._attr_filter()))
 
 
 @dataclass
 class ZPool:
-    '''Class for creating ZFS storage pools.'''
+    """Class for creating ZFS storage pools."""
+
     zpoolprops: ZPoolProps
     zfsprops: ZfsProps
 
     def __str__(self):
-        return ' '.join(('zpool create',
-                         str(self.zpoolprops),
-                         str(self.zfsprops)))
+        return " ".join(("zpool create", str(self.zpoolprops), str(self.zfsprops)))
 
     def _valid_vdev_type(self, vdev_type: str):
         # pylint: disable=no-self-use
-        allowed = ['', 'mirror', 'raidz1', 'raidz2', 'raidz3']
+        allowed = ["", "mirror", "raidz1", "raidz2", "raidz3"]
         if vdev_type not in allowed:
-            raise ValueError(f'vdev_type ({vdev_type}) not in {allowed}.')
+            raise ValueError(f"vdev_type ({vdev_type}) not in {allowed}.")
 
-    def create(self, name: str, disks: List[Path], vdev_type: str = ''):
-        '''Creates a ZFS storage pool.
+    def create(self, name: str, disks: List[Path], vdev_type: str = ""):
+        """Creates a ZFS storage pool.
 
         Creates a new storage pool containing the virtual devices
         specified on the command line. The pool name must begin with a
@@ -350,92 +375,85 @@ class ZPool:
             empty string, will create a non-redundant pool using all the
             disks. Valid values are an empty string, 'mirror', 'raidz1',
             'raidz2', and 'raidz3'.
-        '''
+        """
         self._valid_vdev_type(vdev_type=vdev_type)
 
         disks_str = [str(disk) for disk in disks]
-        return ' '.join((str(self), name, vdev_type, *disks_str))
+        return " ".join((str(self), name, vdev_type, *disks_str))
 
 
 @dataclass
 class ZDataset:
-    '''Create ZFS datasets.'''
+    """Create ZFS datasets."""
+
     zfsprops: ZfsProps
 
     def __post_init__(self):
         self.zfsprops = self.zfsprops
 
     def __str__(self):
-        return ' '.join(('zfs create',
-                         str(self.zfsprops)))
+        return " ".join(("zfs create", str(self.zfsprops)))
 
     def create(self, filesystem: Path):
-        '''Creates a new ZFS file system.
+        """Creates a new ZFS file system.
 
         Parameters
         ----------
         filesystem : Path
             The dataset path to create.
-        '''
-        return ' '.join((str(self), str(filesystem)))
+        """
+        return " ".join((str(self), str(filesystem)))
 
 
 def demo():
-    '''Demonstrate classes and functions in this module.'''
+    """Demonstrate classes and functions in this module."""
     zpoolprops = ZPoolProps(
-        altroot=Path('/mnt'),
-        ashift=12,
-        autotrim='on',
-        compatibility='grub'
+        altroot=Path("/mnt"), ashift=12, autotrim="on", compatibility="grub"
     )
     print(zpoolprops)
     print()
 
-    zpoolprops = ZPoolProps(
-        ashift=12,
-        autotrim='on',
-        compatibility='grub'
-    )
+    zpoolprops = ZPoolProps(ashift=12, autotrim="on", compatibility="grub")
     zfsprops = ZfsProps(
         prefix="O",
-        atime='on',
-        acltype='posixacl',
-        canmount='off',
-        compression='lz4',
-        devices='off',
-        dnodesize='auto',
-        encryption='aes-256-gcm',
-        keylocation='prompt',
-        keyformat='passphrase',
-        mountpoint=Path('/'),
-        normalization='formD',
-        relatime='on',
-        xattr='sa'
+        atime="on",
+        acltype="posixacl",
+        canmount="off",
+        compression="lz4",
+        devices="off",
+        dnodesize="auto",
+        encryption="aes-256-gcm",
+        keylocation="prompt",
+        keyformat="passphrase",
+        mountpoint=Path("/"),
+        normalization="formD",
+        relatime="on",
+        xattr="sa",
     )
     print(zpoolprops)
     print(zfsprops)
     print()
 
     zpool = ZPool(zpoolprops=zpoolprops, zfsprops=zfsprops)
-    print(zpool.create(
-        name='pool',
-        disks=[Path('/dev/disk/by-id/diskA'), Path('/dev/disk/by-id/diskB')]
-    ))
-    print(zpool.create(
-        name='pool',
-        disks=[Path('/dev/disk/by-id/diskA'), Path('/dev/disk/by-id/diskB')],
-        vdev_type='mirror'
-    ))
+    print(
+        zpool.create(
+            name="pool",
+            disks=[Path("/dev/disk/by-id/diskA"), Path("/dev/disk/by-id/diskB")],
+        )
+    )
+    print(
+        zpool.create(
+            name="pool",
+            disks=[Path("/dev/disk/by-id/diskA"), Path("/dev/disk/by-id/diskB")],
+            vdev_type="mirror",
+        )
+    )
     print()
 
-    zfsprops = ZfsProps(
-        prefix='o',
-        canmount='off',
-        mountpoint=Path('/')
-    )
+    zfsprops = ZfsProps(prefix="o", canmount="off", mountpoint=Path("/"))
     zdataset = ZDataset(zfsprops=zfsprops)
-    print(zdataset.create(Path('pool/root')))
+    print(zdataset.create(Path("pool/root")))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo()
