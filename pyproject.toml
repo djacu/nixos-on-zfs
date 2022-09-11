@@ -2,13 +2,16 @@
 name = "pybootstrap"
 version = "0.1.0"
 description = "A package for bootstrapping NixOS Root on ZFS."
-authors = ["Daniel Baker <daniel.baker@tweag.io>"]
+authors = ["Daniel Baker <daniel.n.baker@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 questionary = "^1.10.0"
 
 [tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+pybootstrap = "pybootstrap:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

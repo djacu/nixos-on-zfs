@@ -1,6 +1,9 @@
-{ config, pkgs, ... }:
-
-{ boot.supportedFilesystems = [ "zfs" ];
+{
+  config,
+  pkgs,
+  ...
+}: {
+  boot.supportedFilesystems = ["zfs"];
   networking.hostId = "HOST_ID";
   boot.zfs.devNodes = "DEV_NODES";
   boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
