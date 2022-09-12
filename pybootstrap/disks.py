@@ -1,5 +1,7 @@
+import glob
 import json
 import logging
+import os
 import subprocess
 from typing import List, NamedTuple
 
@@ -17,6 +19,13 @@ class BlockDevice(NamedTuple):
     size: str  # size of the device
     type: str  # device type
     id: str = ""  # disk-by-id (not from lsblk)
+
+
+class DiskById(NamedTuple):
+    """Information about disks by ID."""
+
+    id: str
+    path: str
 
 
 def get_block_devices() -> List[BlockDevice]:
@@ -41,3 +50,19 @@ def get_block_devices() -> List[BlockDevice]:
     block_devices = [BlockDevice(**dev) for dev in block_devices]
     disks_only = list(filter(lambda dev: dev.type == "disk", block_devices))
     return disks_only
+
+
+def get_disks_by_id() -> List[DiskById]:
+    """Creates a list of block devices containing their 'by-id' path and
+    /dev/ absolute path.
+
+    Returns:
+        A list of disks.
+    """
+    disks_by_id = glob.glob("/dev/disk/by-id/*")
+    sym_links = [os.path.realpath(disk) for disk in disks_by_id]
+
+    disks_with_symlink = [
+        DiskById(id=id, path=path) for id, path in zip(disks_by_id, sym_links)
+    ]
+    return disks_with_symlink
