@@ -18,11 +18,51 @@ class TestBlockDevices(TestCase):
         # set up
         stdout = b"""
         {                                                                                                                                                             "blockdevices": [
-                {"name":"loop0", "kname":"loop0", "path":"/dev/loop0", "model":null, "serial":null, "size":"4K", "type":"loop"},
-                {"name":"loop1", "kname":"loop1", "path":"/dev/loop1", "model":null, "serial":null, "size":"113.9M", "type":"loop"},
-                {"name":"hda", "kname":"hda", "path":"/dev/hda", "model":"Toshiba_S300Pro", "serial":"1234567890", "size":"9.9TB", "type":"disk"},
-                {"name":"sda", "kname":"sda", "path":"/dev/sda", "model":"SanDisk_SD9SN8W512G", "serial":"183347423947", "size":"465.8G", "type":"disk"},
-                {"name":"nvme0n1", "kname":"nvme0n1", "path":"/dev/nvme0n1", "model":"Samsung SSD 970 PRO 1TB", "serial":"S462NF0K816201E", "size":"953.9G", "type":"disk"}
+                {
+                    "name":"loop0",
+                    "kname":"loop0",
+                    "path":"/dev/loop0",
+                    "model":null,
+                    "serial":null,
+                    "size":"4K",
+                    "type":"loop"
+                },
+                {
+                    "name":"loop1",
+					"kname":"loop1",
+					"path":"/dev/loop1",
+					"model":null,
+					"serial":null,
+					"size":"113.9M",
+					"type":"loop"
+                },
+                {
+                    "name":"hda",
+					"kname":"hda",
+					"path":"/dev/hda",
+					"model":"Toshiba_S300Pro",
+					"serial":"1234567890",
+					"size":"9.9TB",
+					"type":"disk"
+                },
+                {
+                    "name":"sda",
+					"kname":"sda",
+					"path":"/dev/sda",
+					"model":"SanDisk_SD9SN8W512G",
+					"serial":"183347423947",
+					"size":"465.8G",
+					"type":"disk"
+                },
+                {
+                    "name":"nvme0n1",
+					"kname":"nvme0n1",
+					"path":"/dev/nvme0n1",
+					"model":"Samsung SSD 970 PRO 1TB",
+					"serial":"S462NF0K816201E",
+					"size":"953.9G",
+					"type":"disk"
+                }
             ]
         }"""
         lsblk_cmd = "lsblk -d --json -o name,kname,path,model,serial,size,type"
