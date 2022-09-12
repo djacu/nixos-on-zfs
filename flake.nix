@@ -63,7 +63,7 @@
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
           packages = with pkgs; [
-            python310
+            pybootstrapEnv
             python310Packages.poetry
           ];
         };
