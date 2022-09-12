@@ -1,7 +1,7 @@
 import json
 import logging
 import subprocess
-from typing import Dict, List, NamedTuple
+from typing import List, NamedTuple
 
 logger = logging.getLogger(__name__)
 
