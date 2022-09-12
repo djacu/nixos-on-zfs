@@ -7,6 +7,7 @@ authors = ["Daniel Baker <daniel.n.baker@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 questionary = "^1.10.0"
+testfixtures = "^7.0.0"
 
 [tool.poetry.dev-dependencies]
 
