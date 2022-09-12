@@ -7,6 +7,8 @@
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.flake-compat.url = "github:edolstra/flake-compat";
   inputs.flake-compat.flake = false;
+  inputs.nixos-generators.url = "github:nix-community/nixos-generators";
+  inputs.nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
   inputs.poetry2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
@@ -19,6 +21,7 @@
     nixpkgs,
     flake-utils,
     flake-compat,
+    nixos-generators,
     poetry2nix,
     pre-commit-hooks,
   }:
@@ -53,8 +56,21 @@
           projectDir = ./.;
           python = pkgs.python310;
         };
+
+        iso = nixos-generators.nixosGenerate {
+          inherit system;
+          format = "iso";
+
+          modules = [
+            "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+            ({...}: {environment.systemPackages = [pybootstrapApp];})
+          ];
+        };
       in {
-        packages.default = pybootstrapEnv;
+        packages.default = iso;
+        packages = {
+          inherit iso pybootstrapEnv;
+        };
 
         apps.default.program = "${pybootstrapApp}/bin/pybootstrap";
         apps.default.type = "app";
