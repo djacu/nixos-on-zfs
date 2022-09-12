@@ -1,7 +1,7 @@
 {
   description = "An application to assist in installing NixOS on ZFS.";
 
-  nixConfig.bash-prompt = "\[nix-develop\]$ ";
+  nixConfig.bash-prompt-prefix = "\[nix-develop\] ";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
@@ -63,7 +63,7 @@
           inherit (self.checks.${system}.pre-commit-check) shellHook;
 
           packages = with pkgs; [
-            python310
+            pybootstrapEnv
             python310Packages.poetry
           ];
         };
