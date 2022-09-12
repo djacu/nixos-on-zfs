@@ -38,12 +38,21 @@
             alejandra.enable = true;
             black.enable = true;
             isort.enable = true;
+            unittest = {
+              enable = true;
+              name = "unittest";
+              description = "Python unit testing.";
+              entry = "${pybootstrapEnv}/bin/python -m unittest";
+              types = ["file" "python"];
+            };
           };
         };
 
+        pythonEnv = pkgs.python310;
+
         pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
           projectDir = ./.;
-          python = pkgs.python310;
+          python = pythonEnv;
           editablePackageSources = {
             pybootstrap = ./pybootstrap;
           };
@@ -51,7 +60,7 @@
 
         pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
           projectDir = ./.;
-          python = pkgs.python310;
+          python = pythonEnv;
         };
       in {
         packages.default = pybootstrapEnv;
