@@ -59,20 +59,30 @@
           inherit python;
         };
 
-        iso = nixos-generators.nixosGenerate {
-          inherit system;
-          format = "iso";
+        # Uses nixos-generators to generate output for the given target format.
+        mkGenerate = format: {
+          "image-${format}" = nixos-generators.nixosGenerate {
+            inherit format system;
 
-          modules = [
-            "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-            ({...}: {environment.systemPackages = [pybootstrapApp];})
-          ];
+            modules = [
+              "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+              ({...}: {
+                environment.systemPackages = [
+                  pybootstrapApp
+                ];
+              })
+            ];
+          };
         };
       in {
-        packages.default = iso;
-        packages = {
-          inherit iso pybootstrapEnv;
-        };
+        packages =
+          {
+            inherit pybootstrapApp pybootstrapEnv;
+            default = pybootstrapApp;
+          }
+          // mkGenerate "iso"
+          // mkGenerate "vm"
+          // {}; # nix formatter hack
 
         apps.default.program = "${pybootstrapApp}/bin/pybootstrap";
         apps.default.type = "app";
