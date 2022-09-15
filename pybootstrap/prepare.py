@@ -267,7 +267,7 @@ def get_topology() -> str:
     return response
 
 
-def get_partition_size(name: str, value: Optional[int] = None) -> string:
+def get_partition_size(name: str, value: Optional[int] = None) -> str:
     """Queries the user for a partition size.
 
     Args:
