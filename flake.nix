@@ -44,17 +44,19 @@
           };
         };
 
+        python = pkgs.python310;
+
         pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
-          projectDir = ./.;
-          python = pkgs.python310;
+          projectDir = self;
+          inherit python;
           editablePackageSources = {
             pybootstrap = ./pybootstrap;
           };
         };
 
         pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
-          projectDir = ./.;
-          python = pkgs.python310;
+          projectDir = self;
+          inherit python;
         };
 
         iso = nixos-generators.nixosGenerate {
