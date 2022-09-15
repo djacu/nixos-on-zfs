@@ -7,6 +7,8 @@
   inputs.flake-utils.url = "github:numtide/flake-utils";
   inputs.flake-compat.url = "github:edolstra/flake-compat";
   inputs.flake-compat.flake = false;
+  inputs.nixos-generators.url = "github:nix-community/nixos-generators";
+  inputs.nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
   inputs.poetry2nix.url = "github:nix-community/poetry2nix";
   inputs.poetry2nix.inputs.flake-utils.follows = "flake-utils";
   inputs.poetry2nix.inputs.nixpkgs.follows = "nixpkgs";
@@ -19,6 +21,7 @@
     nixpkgs,
     flake-utils,
     flake-compat,
+    nixos-generators,
     poetry2nix,
     pre-commit-hooks,
   }:
@@ -41,20 +44,45 @@
           };
         };
 
+        python = pkgs.python310;
+
         pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
-          projectDir = ./.;
-          python = pkgs.python310;
+          projectDir = self;
+          inherit python;
           editablePackageSources = {
             pybootstrap = ./pybootstrap;
           };
         };
 
         pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
-          projectDir = ./.;
-          python = pkgs.python310;
+          projectDir = self;
+          inherit python;
+        };
+
+        # Uses nixos-generators to generate output for the given target format.
+        mkGenerate = format: {
+          "image-${format}" = nixos-generators.nixosGenerate {
+            inherit format system;
+
+            modules = [
+              "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+              ({...}: {
+                environment.systemPackages = [
+                  pybootstrapApp
+                ];
+              })
+            ];
+          };
         };
       in {
-        packages.default = pybootstrapEnv;
+        packages =
+          {
+            inherit pybootstrapApp pybootstrapEnv;
+            default = pybootstrapApp;
+          }
+          // mkGenerate "iso"
+          // mkGenerate "vm"
+          // {}; # nix formatter hack
 
         apps.default.program = "${pybootstrapApp}/bin/pybootstrap";
         apps.default.type = "app";
