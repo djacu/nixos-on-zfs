@@ -6,8 +6,8 @@ from pybootstrap.prepare import ZfsSystemConfig
 
 
 def install(config: ZfsSystemConfig):
-    rpool_id = f"rpool_{config.zfs.pool_uuid}"
-    bpool_id = f"bpool_{config.zfs.pool_uuid}"
+    rpool_id = f"rpool"
+    bpool_id = f"bpool"
 
     rpool_nix = f"{rpool_id}/{config.zfs.os_id}"
     bpool_nix = f"{bpool_id}/{config.zfs.os_id}"
