@@ -40,12 +40,19 @@ class NixOSConfig(NamedTuple):
     zfs: str
 
 
+class Bootloader(NamedTuple):
+    """Information about the bootloader."""
+
+    name: str
+
+
 class ZfsSystemConfig(NamedTuple):
     """A system configuration to build NixOS root on ZFS."""
 
     zfs: ZfsConfig
     part: PartitionConfig
     nixos: NixOSConfig
+    bootloader: Bootloader
 
 
 class BlockDevice(NamedTuple):
@@ -100,7 +107,14 @@ def prepare() -> ZfsSystemConfig:
         zfs="zfs.nix",
     )
 
-    sys_config = ZfsSystemConfig(zfs=zfs_config, part=part_config, nixos=nixos_config)
+    bootloader_config = get_boot_loader()
+
+    sys_config = ZfsSystemConfig(
+        zfs=zfs_config,
+        part=part_config,
+        nixos=nixos_config,
+        bootloader=bootloader_config,
+    )
     return sys_config
 
 
@@ -296,6 +310,19 @@ def get_system_memory(size: str = "GiB") -> int:
             raise ValueError("Unknown size: {size}.")
 
     return math.ceil(sys_mem / divisor)
+
+
+def get_boot_loader() -> Bootloader:
+    """Queries the user for a bootloader.
+
+    Returns:
+        Information about the bootloader.
+    """
+    message = "Select a bootloader."
+    response = questionary.select(
+        message=message, choices=["systemd-boot", "grub"], default="systemd-boot"
+    ).ask()
+    return Bootloader(name=response)
 
 
 if __name__ == "__main__":

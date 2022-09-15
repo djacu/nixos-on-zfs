@@ -1,7 +1,7 @@
 """A module for partitioning for zpool and zfs dataset creation."""
 import subprocess
 from pathlib import Path
-from typing import NamedTuple
+from typing import List, NamedTuple
 
 import questionary
 
@@ -43,6 +43,33 @@ def wipe_disks(config: ZfsSystemConfig) -> None:
 
 
 def sgdisk(config: ZfsSystemConfig) -> None:
+    """Partitions the disks for a given bootloader."""
+    commands = get_sgdisk_commands(config=config)
+    for cmd_str in commands:
+        subprocess.run(cmd_str.split(), check=True)
+    subprocess.run("sync", check=True)
+    subprocess.run("sleep 3".split(), check=True)
+
+
+def get_sgdisk_commands(config: ZfsSystemConfig) -> List[str]:
+    """Returns a list of commands to partition the disks for a given bootloader."""
+    match config.bootloader.name:
+        case "grub":
+            partition_cmds = get_sgdisk_grub_commands(config=config)
+        case "systemd-boot":
+            partition_cmds = get_sgdisk_systemd_boot_commands(config=config)
+        case _:
+            raise ValueError(f"Unknown bootloader: {config.bootloader.name}")
+
+    return [
+        " ".join((str(cmd), disk))
+        for disk in config.zfs.disks
+        for cmd in partition_cmds
+    ]
+
+
+def get_sgdisk_grub_commands(config: ZfsSystemConfig) -> List[str]:
+    """Returns a list of commands (sans device) to partition the disks for grub."""
     commands = []
 
     zap = "sgdisk --zap-all"
@@ -55,7 +82,9 @@ def sgdisk(config: ZfsSystemConfig) -> None:
     commands.append(boot_part)
 
     if config.part.swap not in ("", 0):
-        swap_part = SGDisk(partnum=4, start=0, end=int(config.part.swap), hexcode=8200)
+        swap_part = SGDisk(
+            partnum=4, start=0, end=int(config.part.swap), hexcode="8200"
+        )
         commands.append(swap_part)
 
     if config.part.root in (0, ""):
@@ -69,13 +98,35 @@ def sgdisk(config: ZfsSystemConfig) -> None:
     )
     commands.append(legacy_part)
 
-    for disk in config.zfs.disks:
-        for cmd in commands:
-            cmd_str = " ".join((str(cmd), disk))
-            subprocess.run(cmd_str.split(), check=True)
-            # print(' '.join((str(cmd), disk)))
-    subprocess.run("sync", check=True)
-    subprocess.run("sleep 3".split(), check=True)
+    return commands
+
+
+def get_sgdisk_systemd_boot_commands(config: ZfsSystemConfig) -> List[str]:
+    """Returns a list of commands (sans device) to partition the disks for systemd-boot."""
+    commands = []
+
+    zap = "sgdisk --zap-all"
+    commands.append(zap)
+
+    esp_part = SGDisk(partnum=1, start=0, end=int(config.part.esp), hexcode="EF00")
+    commands.append(esp_part)
+
+    boot_part = SGDisk(partnum=2, start=0, end=int(config.part.boot), hexcode="BE00")
+    commands.append(boot_part)
+
+    if config.part.swap not in ("", 0):
+        swap_part = SGDisk(
+            partnum=4, start=0, end=int(config.part.swap), hexcode="8200"
+        )
+        commands.append(swap_part)
+
+    if config.part.root in (0, ""):
+        root_part = SGDisk(partnum=3, start=0, end=0, hexcode="BF00")
+    else:
+        root_part = SGDisk(partnum=3, start=0, end=config.part.root, hexcode="BF00")
+    commands.append(root_part)
+
+    return commands
 
 
 def zfs_create(config: ZfsSystemConfig):
