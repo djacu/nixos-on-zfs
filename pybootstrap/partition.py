@@ -96,7 +96,7 @@ def zfs_create(config: ZfsSystemConfig):
         mountpoint=Path("/boot"),
     )
 
-    bpool_name = "bpool_" + config.zfs.pool_uuid
+    bpool_name = "bpool"
     bpool_parts = [f"{disk}-part2" for disk in config.zfs.disks]
     bpool_vdev_type = ""
     if len(config.zfs.disks) > 1:
@@ -129,7 +129,7 @@ def zfs_create(config: ZfsSystemConfig):
         mountpoint=Path("/"),
     )
 
-    rpool_name = "rpool_" + config.zfs.pool_uuid
+    rpool_name = "rpool"
     rpool_parts = [f"{disk}-part3" for disk in config.zfs.disks]
     rpool_vdev_type = config.zfs.topology
 

@@ -3,7 +3,6 @@ import glob
 import json
 import math
 import os
-import random
 import string
 import subprocess
 from pathlib import Path
@@ -16,7 +15,6 @@ import questionary
 class ZfsConfig(NamedTuple):
     """Information about the ZFS pool topology and disks."""
 
-    pool_uuid: str
     os_id: str
     disks: List[str]
     primary_disk: str
@@ -80,7 +78,6 @@ def prepare() -> ZfsSystemConfig:
     disks = get_disks()
     primary_disk = disks[0]
     zfs_config = ZfsConfig(
-        pool_uuid=random_str(num=6),
         os_id="nixos",
         disks=disks,
         primary_disk=primary_disk,
@@ -105,19 +102,6 @@ def prepare() -> ZfsSystemConfig:
 
     sys_config = ZfsSystemConfig(zfs=zfs_config, part=part_config, nixos=nixos_config)
     return sys_config
-
-
-def random_str(num: int = 6) -> str:
-    """Returns a random string (lower case alpha characters only).
-
-    Args:
-        num: The number of characters to return.
-
-    Returns:
-        The random string.
-    """
-    hex_digits = string.ascii_lowercase + string.digits
-    return "".join(random.choice(hex_digits) for _ in range(num))
 
 
 def get_disks() -> List[str]:
