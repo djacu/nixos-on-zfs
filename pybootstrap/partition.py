@@ -143,9 +143,7 @@ def zfs_create(config: ZfsSystemConfig):
     root_os_zfsprops = ZfsProps(
         prefix="o",
         canmount="off",
-        encryption="aes-256-gcm",
-        keylocation="prompt",
-        keyformat="passphrase",
+        encryption="off",
         mountpoint="none",
     )
     root_os_path = Path(rpool_name) / config.zfs.os_id
