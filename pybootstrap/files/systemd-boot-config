@@ -1,3 +1,5 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.systemd-boot.enable = true;
   boot.loader.systemd-boot.consoleMode = "2";
+  boot.loader.grub.efiSupport = true;
+  boot.loader.grub.device = "nodev";

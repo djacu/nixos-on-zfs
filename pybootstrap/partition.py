@@ -132,7 +132,10 @@ def get_sgdisk_systemd_boot_commands(config: ZfsSystemConfig) -> List[str]:
 def zfs_create(config: ZfsSystemConfig):
     # Create the boot pool
     bpool_zpoolprops = ZPoolProps(
-        altroot=Path("/mnt"), ashift=13, autotrim="on", compatibility="grub2"
+        altroot=Path("/mnt"),
+        ashift=13,
+        autotrim="on",
+        compatibility=config.zfs.compatability,
     )
     bpool_zfsprops = ZfsProps(
         prefix="O",

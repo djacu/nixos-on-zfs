@@ -19,6 +19,7 @@ class ZfsConfig(NamedTuple):
     disks: List[str]
     primary_disk: str
     topology: str
+    compatability: str = ""
 
 
 class PartitionConfig(NamedTuple):
@@ -84,11 +85,18 @@ def prepare() -> ZfsSystemConfig:
     """
     disks = get_disks()
     primary_disk = disks[0]
+    bootloader_config = get_boot_loader()
+
+    compatability = "off"
+    if bootloader_config.name == "grub":
+        compatability = "grub2"
+
     zfs_config = ZfsConfig(
         os_id="nixos",
         disks=disks,
         primary_disk=primary_disk,
         topology=get_topology(),
+        compatability=compatability,
     )
 
     sys_mem_gb = get_system_memory(size="GiB")
@@ -106,8 +114,6 @@ def prepare() -> ZfsSystemConfig:
         path=Path("/mnt/etc/nixos"),
         zfs="zfs.nix",
     )
-
-    bootloader_config = get_boot_loader()
 
     sys_config = ZfsSystemConfig(
         zfs=zfs_config,
