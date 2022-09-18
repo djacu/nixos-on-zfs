@@ -1,0 +1,26 @@
+  boot.loader.efi.canTouchEfiVariables = false;
+
+  boot.loader = {
+    generationsDir.copyKernels = true;
+    # for problematic UEFI firmware
+    grub.efiInstallAsRemovable = true;
+    grub.enable = true;
+    grub.version = 2;
+    grub.copyKernels = true;
+    grub.efiSupport = true;
+    grub.zfsSupport = true;
+    # for systemd-autofs
+    grub.extraPrepareConfig = ''
+      mkdir -p /boot/efis
+      for i in /boot/efis/*; do mount $i ; done
+    '';
+    grub.extraInstallCommands = ''
+      export ESP_MIRROR=$(mktemp -d -p /tmp)
+      cp -r /boot/efis/PRIMARY_DISK-part1/EFI $ESP_MIRROR
+      for i in /boot/efis/*; do
+        cp -r $ESP_MIRROR/EFI $i
+      done
+      rm -rf $ESP_MIRROR
+    '';
+    grub.devices = [GRUB_DEVICES];
+  };

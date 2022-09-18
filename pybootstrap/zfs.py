@@ -408,12 +408,12 @@ class ZDataset:
 def demo():
     """Demonstrate classes and functions in this module."""
     zpoolprops = ZPoolProps(
-        altroot=Path("/mnt"), ashift=12, autotrim="on", compatibility="grub"
+        altroot=Path("/mnt"), ashift=12, autotrim="on", compatibility="grub2"
     )
     print(zpoolprops)
     print()
 
-    zpoolprops = ZPoolProps(ashift=12, autotrim="on", compatibility="grub")
+    zpoolprops = ZPoolProps(ashift=12, autotrim="on", compatibility="grub2")
     zfsprops = ZfsProps(
         prefix="O",
         atime="on",

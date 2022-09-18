@@ -3,6 +3,7 @@ import re
 import subprocess
 from functools import partial
 from pathlib import Path
+from typing import List
 
 import questionary
 
@@ -107,12 +108,14 @@ def update_zfs_nix_file(config: ZfsSystemConfig):
     with open(old_path, "r", encoding="UTF-8") as file:
         lines = file.readlines()
 
+    newlines = update_zfs_nix_bootloader(lines=lines, config=config)
+
     host_id = get_machine_id()[:8]
     init_hash = get_initial_hashed_pw()
     nix_replace = partial(
         zfs_nix_replace, config=config, host_id=host_id, init_hash=init_hash
     )
-    newlines = list(map(nix_replace, lines))
+    newlines = list(map(nix_replace, newlines))
 
     if config.part.swap in ("", "0"):
         newlines = [line for line in newlines if "swapDevices" not in line]
@@ -126,6 +129,27 @@ def update_zfs_nix_file(config: ZfsSystemConfig):
 
     with open(new_path, "w", encoding="UTF-8") as file:
         file.writelines(newlines)
+
+
+def update_zfs_nix_bootloader(lines: List[str], config: ZfsSystemConfig) -> List[str]:
+    """Replace the bootloader keyword with the bootloader config."""
+    match config.bootloader.name:
+        case "grub":
+            config_file_name = "grub-config"
+        case "systemd-boot":
+            config_file_name = "systemd-boot-config"
+        case _:
+            raise ValueError(f"Unknown bootloader: {config.bootloader.name}")
+
+    config_file_path = Path(__file__).parent / "files" / config_file_name
+
+    with open(config_file_path, "r", encoding="UTF-8") as file:
+        bootloader_config = file.read()
+
+    single_string = "".join(lines)
+    new_string = single_string.replace("  #BOOT_LOADER", bootloader_config)
+    delim = "\n"
+    return [line + delim for line in new_string.split(delim)]
 
 
 def zfs_nix_replace(
