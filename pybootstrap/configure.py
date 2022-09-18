@@ -146,9 +146,10 @@ def update_zfs_nix_bootloader(lines: List[str], config: ZfsSystemConfig) -> List
     with open(config_file_path, "r", encoding="UTF-8") as file:
         bootloader_config = file.read()
 
-    single_string = "\n".join(lines)
-    new_string = single_string.replace("#BOOT_LOADER", bootloader_config)
-    return new_string.split("\n")
+    single_string = "".join(lines)
+    new_string = single_string.replace("  #BOOT_LOADER", bootloader_config)
+    delim = "\n"
+    return [line + delim for line in new_string.split(delim)]
 
 
 def zfs_nix_replace(

@@ -12,6 +12,8 @@
   environment.etc."machine-id".source = "/state/etc/machine-id";
   environment.etc."zfs/zpool.cache".source = "/state/etc/zfs/zpool.cache";
   boot.loader.efi.efiSysMountPoint = "/boot/efis/PRIMARY_DISK-part1";
+
+  # boot loader specific config
   #BOOT_LOADER
   users.users.root.initialHashedPassword = "INITIAL_HASHED_PW";
 }
