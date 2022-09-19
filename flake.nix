@@ -45,19 +45,21 @@
         };
 
         python = pkgs.python310;
-
-        pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv {
-          projectDir = self;
+        pybootstrapSet = {
           inherit python;
-          editablePackageSources = {
-            pybootstrap = ./pybootstrap;
-          };
+          projectDir = self + /pybootstrap;
         };
 
-        pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication {
-          projectDir = self;
-          inherit python;
-        };
+        pybootstrapEnv = pkgs.poetry2nix.mkPoetryEnv (
+          pybootstrapSet
+          // {
+            editablePackageSources = {
+              pybootstrap = pybootstrapSet.projectDir;
+            };
+          }
+        );
+
+        pybootstrapApp = pkgs.poetry2nix.mkPoetryApplication pybootstrapSet;
 
         # Uses nixos-generators to generate output for the given target format.
         mkGenerate = format: {
