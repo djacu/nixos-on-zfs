@@ -14,6 +14,7 @@ def configure(config: ZfsSystemConfig):
     """Setup the NixOS configuration files."""
     generate_system_config()
     update_config_imports(config=config)
+    add_experimental_features_to_configuration(config=config)
     remove_systemd_boot_refs(config=config)
     update_hardware_config(config=config)
     update_zfs_nix_file(config=config)
@@ -42,6 +43,23 @@ def update_config_imports(config: ZfsSystemConfig):
 
     with open(config_file, "w", encoding="UTF-8") as file:
         file.writelines(newlines)
+
+
+def add_experimental_features_to_configuration(config: ZfsSystemConfig) -> None:
+    """Add nix-command and flakes to nix so NixOS is flake ready."""
+
+    config_file = config.nixos.path / config.nixos.config
+
+    with open(config_file, "r", encoding="UTF-8") as file:
+        configuration = file.read()
+
+    regex_seq = re.compile(r"(./zfs.nix\n\s*];\n)", re.MULTILINE)
+    # \1 pulls the match group from the pattern so we aren't really replacing but appending
+    new_text = r'\1\n  nix.settings.experimental-features = "nix-command flakes";\n'
+    configuration = regex_seq.sub(new_text, configuration)
+
+    with open(config_file, "w", encoding="UTF-8") as file:
+        file.write(configuration)
 
 
 def remove_systemd_boot_refs(config: ZfsSystemConfig):
