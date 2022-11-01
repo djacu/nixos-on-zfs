@@ -3,8 +3,9 @@ import glob
 import json
 import math
 import os
-import string
 import subprocess
+from dataclasses import asdict, dataclass, fields
+from os.path import realpath
 from pathlib import Path
 from time import sleep
 from typing import List, NamedTuple, Optional, Sequence
@@ -56,7 +57,8 @@ class ZfsSystemConfig(NamedTuple):
     bootloader: Bootloader
 
 
-class BlockDevice(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class BlockDevice:
     """Information about a block device."""
 
     name: str
@@ -66,7 +68,6 @@ class BlockDevice(NamedTuple):
     serial: str
     size: str
     type: str
-    id: str = ""
 
 
 class DiskById(NamedTuple):
@@ -74,6 +75,21 @@ class DiskById(NamedTuple):
 
     id: str
     path: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class DiskByPath:
+    """Information about disks by path."""
+
+    sym_path: str
+    real_path: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class BlockDeviceWithDisk(BlockDevice, DiskByPath):
+    """A block device with disk path information."""
+
+    pass
 
 
 def prepare() -> ZfsSystemConfig:
@@ -132,19 +148,21 @@ def get_disks() -> List[str]:
         A list of disks by id.
     """
     blk_devs = get_block_devices()
-    disks_by_id = get_disks_by_id()
-    blk_devs = add_id_to_block_devices(blk_devs, disks_by_id)
+    # disks_by_id = get_disks_by_id()
+    # blk_devs = add_id_to_block_devices(blk_devs, disks_by_id)
+    disks_by_path = get_disks_by_path()
+    blk_devs = check_disks_by_path_against_block_devices(blk_devs, disks_by_path)
     selection = ask_for_disk_selection(blk_devs)
     return selection
 
 
-def ask_for_disk_selection(blk_devs: List[BlockDevice]) -> List[str]:
+def ask_for_disk_selection(blk_devs: List[BlockDeviceWithDisk]) -> List[str]:
     """Queries the user for a selection of disks to add to the zpool.
 
     Returns:
         A list of disks by id.
     """
-    keys = ("id", "path", "size")
+    keys = ("sym_path", "model", "serial", "size")
     formatted_blk_devs = tabulate_block_devices(blk_devs=blk_devs, keys=keys)
 
     while True:
@@ -175,7 +193,7 @@ def ask_for_disk_selection(blk_devs: List[BlockDevice]) -> List[str]:
 
 
 def tabulate_block_devices(
-    blk_devs: List[BlockDevice], keys: Sequence[str]
+    blk_devs: List[BlockDeviceWithDisk], keys: Sequence[str]
 ) -> List[str]:
     """Takes a list of block devices and returns a list of strings that
     can be printed as a nicely formatted table.
@@ -200,9 +218,8 @@ def get_block_devices() -> List[BlockDevice]:
     """
     # pylint: disable=no-member
     # pylint: disable=protected-access
-    blk_fields = BlockDevice._fields
-    non_blk_fields = BlockDevice._field_defaults.keys()
-    lsblk_cols = ",".join((key for key in blk_fields if key not in non_blk_fields))
+    blk_fields = [field.name for field in fields(BlockDevice)]
+    lsblk_cols = ",".join(blk_fields)
 
     process = subprocess.run(
         f"lsblk -d --json -o {lsblk_cols}".split(),
@@ -214,6 +231,48 @@ def get_block_devices() -> List[BlockDevice]:
     block_devices = [BlockDevice(**dev) for dev in block_devices]
     disks_only = list(filter(lambda dev: dev.type == "disk", block_devices))
     return disks_only
+
+
+def get_disks_by_path() -> List[DiskByPath]:
+    """Creates a list of block devices containing their 'by-path' symlink path
+    and their /dev/ real path.
+
+
+    Retruns:
+        A list of disks.
+    """
+    disks_by_path = glob.glob("/dev/disk/by-path/*")
+    real_path = [os.path.realpath(disk) for disk in disks_by_path]
+
+    disks_with_symlink = [
+        DiskByPath(sym_path=sym_path, real_path=real_path)
+        for sym_path, real_path in zip(disks_by_path, real_path)
+    ]
+    return disks_with_symlink
+
+
+def check_disks_by_path_against_block_devices(
+    blk_devs: List[BlockDevice], disks_by_path: List[DiskByPath]
+) -> List[BlockDeviceWithDisk]:
+    """Matches a list of block devices to a list of disks by path and adds
+    the disk 'by-path' path to the matching block device.
+
+    Args:
+        blk_devs: A list of block devices.
+        disks_by_path: A list of disks containing they 'by-path' symbolic
+        path and /dev/ absolute path.
+
+    Returns:
+        A new list of block devices.
+    """
+    new_blk_devs = []
+    for dev in blk_devs:
+        for disk in disks_by_path:
+            if dev.path == disk.real_path:
+                new_blk_dev = BlockDeviceWithDisk(**{**asdict(dev), **asdict(disk)})
+                new_blk_devs.append(new_blk_dev)
+                continue
+    return new_blk_devs
 
 
 def get_disks_by_id() -> List[DiskById]:
@@ -232,27 +291,27 @@ def get_disks_by_id() -> List[DiskById]:
     return disks_with_symlink
 
 
-def add_id_to_block_devices(
-    blk_devs: List[BlockDevice], disks_by_id: List[DiskById]
-) -> List[BlockDevice]:
-    """Matches a list of block devices to a list of disks by id and adds
-    the disk 'by-id' path to the matching block device.
-
-    Args:
-        blk_devs: A list of block devices.
-        disks_by_id: A list of disks containing they 'by-id' symbolic
-        path and /dev/ absolute path.
-
-    Returns:
-        A new list of block devices.
-    """
-    new_blk_devs = []
-    for dev in blk_devs:
-        for disk in disks_by_id:
-            if dev.path == disk.path and dev.serial in disk.id:
-                new_blk_devs.append(dev._replace(id=disk.id))
-                continue
-    return new_blk_devs
+# def add_id_to_block_devices(
+#     blk_devs: List[BlockDevice], disks_by_id: List[DiskById]
+# ) -> List[BlockDevice]:
+#     """Matches a list of block devices to a list of disks by id and adds
+#     the disk 'by-id' path to the matching block device.
+#
+#     Args:
+#         blk_devs: A list of block devices.
+#         disks_by_id: A list of disks containing they 'by-id' symbolic
+#         path and /dev/ absolute path.
+#
+#     Returns:
+#         A new list of block devices.
+#     """
+#     new_blk_devs = []
+#     for dev in blk_devs:
+#         for disk in disks_by_id:
+#             if dev.path == disk.path and dev.serial in disk.id:
+#                 new_blk_devs.append(dev._replace(id=disk.id))
+#                 continue
+#     return new_blk_devs
 
 
 def get_topology() -> str:
