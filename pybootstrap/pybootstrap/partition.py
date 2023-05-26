@@ -1,5 +1,5 @@
 """A module for partitioning for zpool and zfs dataset creation."""
-import subprocess
+#import subprocess
 from pathlib import Path
 from typing import List, NamedTuple
 
@@ -39,16 +39,25 @@ def wipe_disks(config: ZfsSystemConfig) -> None:
     )
     if response:
         for disk in config.zfs.disks:
-            subprocess.run(f"blkdiscard -f {disk}".split(), check=True)
+            # subprocess.run(f"blkdiscard -f {disk}".split(), check=True)
+
+            with open('cmd_partition', 'a') as file:
+                file.write(f"blkdiscard -f {disk}")
 
 
 def sgdisk(config: ZfsSystemConfig) -> None:
     """Partitions the disks for a given bootloader."""
     commands = get_sgdisk_commands(config=config)
     for cmd_str in commands:
-        subprocess.run(cmd_str.split(), check=True)
-    subprocess.run("sync", check=True)
-    subprocess.run("sleep 3".split(), check=True)
+        # subprocess.run(cmd_str.split(), check=True)
+        with open('cmd_partition', 'a') as file:
+            file.write(cmd_str)
+
+    # subprocess.run("sync", check=True)
+    # subprocess.run("sleep 3".split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write('sync')
+        file.write('sleep 3')
 
 
 def get_sgdisk_commands(config: ZfsSystemConfig) -> List[str]:
@@ -160,7 +169,9 @@ def zfs_create(config: ZfsSystemConfig):
     bpool_create = bpool.create(
         name=bpool_name, disks=bpool_parts, vdev_type=bpool_vdev_type
     )
-    subprocess.run(bpool_create.split(), check=True)
+    # subprocess.run(bpool_create.split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(bpool_create)
 
     # Create the root pool
     rpool_zpoolprops = ZPoolProps(
@@ -191,7 +202,9 @@ def zfs_create(config: ZfsSystemConfig):
     rpool_create = rpool.create(
         name=rpool_name, disks=rpool_parts, vdev_type=rpool_vdev_type
     )
-    subprocess.run(rpool_create.split(), check=True)
+    # subprocess.run(rpool_create.split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(rpool_create)
 
     # Create OS dataset
     root_os_zfsprops = ZfsProps(
@@ -202,7 +215,9 @@ def zfs_create(config: ZfsSystemConfig):
     )
     root_os_path = Path(rpool_name) / config.zfs.os_id
     root_os_dataset = ZDataset(zfsprops=root_os_zfsprops)
-    subprocess.run(root_os_dataset.create(filesystem=root_os_path).split(), check=True)
+    # subprocess.run(root_os_dataset.create(filesystem=root_os_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(root_os_dataset.create(filesystem=root_os_path))
 
     # Common
     container_props = ZfsProps(prefix="o", canmount="off", mountpoint="none")
@@ -211,48 +226,66 @@ def zfs_create(config: ZfsSystemConfig):
     root_zfsprops = container_props
     root_path = root_os_path / "ROOT"
     root_dataset = ZDataset(zfsprops=root_zfsprops)
-    subprocess.run(root_dataset.create(filesystem=root_path).split(), check=True)
+    # subprocess.run(root_dataset.create(filesystem=root_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(root_dataset.create(filesystem=root_path))
 
     rdefault_zfsprops = ZfsProps(prefix="o", canmount="noauto", mountpoint=Path("/"))
     rdefault_path = root_path / "default"
     rdefault_dataset = ZDataset(zfsprops=rdefault_zfsprops)
-    subprocess.run(
-        rdefault_dataset.create(filesystem=rdefault_path).split(), check=True
-    )
+    # subprocess.run(
+    #     rdefault_dataset.create(filesystem=rdefault_path).split(), check=True
+    # )
+    with open('cmd_partition', 'a') as file:
+        file.write(rdefault_dataset.create(filesystem=rdefault_path))
 
-    subprocess.run(f"zfs mount {rdefault_path}".split(), check=True)
+    # subprocess.run(f"zfs mount {rdefault_path}".split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(f"zfs mount {rdefault_path}")
 
     # Create BOOT datasets
     boot_os_zfsprops = container_props
     boot_os_path = Path(bpool_name) / config.zfs.os_id
     boot_os_dataset = ZDataset(zfsprops=boot_os_zfsprops)
-    subprocess.run(boot_os_dataset.create(filesystem=boot_os_path).split(), check=True)
+    # subprocess.run(boot_os_dataset.create(filesystem=boot_os_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(boot_os_dataset.create(filesystem=boot_os_path))
 
     boot_zfsprops = container_props
     boot_path = boot_os_path / "BOOT"
     boot_dataset = ZDataset(zfsprops=boot_zfsprops)
-    subprocess.run(boot_dataset.create(filesystem=boot_path).split(), check=True)
+    # subprocess.run(boot_dataset.create(filesystem=boot_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(boot_dataset.create(filesystem=boot_path))
 
     bdefault_zfsprops = ZfsProps(
         prefix="o", canmount="noauto", mountpoint=Path("/boot")
     )
     bdefault_path = boot_path / "default"
     bdefault_dataset = ZDataset(zfsprops=bdefault_zfsprops)
-    subprocess.run(bdefault_dataset.create(bdefault_path).split(), check=True)
+    # subprocess.run(bdefault_dataset.create(bdefault_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(bdefault_dataset.create(bdefault_path))
 
-    subprocess.run(f"zfs mount {bdefault_path}".split(), check=True)
+    # subprocess.run(f"zfs mount {bdefault_path}".split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(f"zfs mount {bdefault_path}")
 
     # Create DATA datasets
     data_zfsprops = container_props
     data_path = root_os_path / "DATA"
     data_dataset = ZDataset(zfsprops=data_zfsprops)
-    subprocess.run(data_dataset.create(filesystem=data_path).split(), check=True)
+    # subprocess.run(data_dataset.create(filesystem=data_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(data_dataset.create(filesystem=data_path))
 
     # Create datasets for mounting nix specific paths
     dlocal_zfsprops = ZfsProps(prefix="o", canmount="off", mountpoint=Path("/"))
     dlocal_path = data_path / "local"
     dlocal_dataset = ZDataset(zfsprops=dlocal_zfsprops)
-    subprocess.run(dlocal_dataset.create(filesystem=dlocal_path).split(), check=True)
+    # subprocess.run(dlocal_dataset.create(filesystem=dlocal_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(dlocal_dataset.create(filesystem=dlocal_path))
 
     for nixdir in ("nix",):
         nixdir_zfsprops = ZfsProps(
@@ -260,73 +293,96 @@ def zfs_create(config: ZfsSystemConfig):
         )
         nixdir_path = dlocal_path / nixdir
         nixdir_dataset = ZDataset(zfsprops=nixdir_zfsprops)
-        subprocess.run(
-            nixdir_dataset.create(filesystem=nixdir_path).split(), check=True
-        )
+        # subprocess.run(
+        #     nixdir_dataset.create(filesystem=nixdir_path).split(), check=True
+        # )
+        with open('cmd_partition', 'a') as file:
+            file.write(nixdir_dataset.create(filesystem=nixdir_path))
 
     # Create user/shared/persistent datasets
     data_default_props = ZfsProps(prefix="o", mountpoint=Path("/"), canmount="off")
     data_default_path = data_path / "default"
     data_default_dataset = ZDataset(zfsprops=data_default_props)
-    subprocess.run(
-        data_default_dataset.create(filesystem=data_default_path).split(), check=True
-    )
+    # subprocess.run(
+    #     data_default_dataset.create(filesystem=data_default_path).split(), check=True
+    # )
+    with open('cmd_partition', 'a') as file:
+        file.write(data_default_dataset.create(filesystem=data_default_path))
 
     # containers
     for shared_con in ("usr", "var", "var/lib"):
         shared_con_props = ZfsProps(prefix="o", canmount="off")
         shared_con_path = data_default_path / shared_con
         shared_con_dataset = ZDataset(zfsprops=shared_con_props)
-        subprocess.run(
-            shared_con_dataset.create(filesystem=shared_con_path).split(), check=True
-        )
+        # subprocess.run(
+        #     shared_con_dataset.create(filesystem=shared_con_path).split(), check=True
+        # )
+        with open('cmd_partition', 'a') as file:
+            file.write(shared_con_dataset.create(filesystem=shared_con_path))
 
     # mounted directories
     for shared in ("home", "root", "srv", "usr/local", "var/log", "var/spool"):
         shared_props = ZfsProps(prefix="o", canmount="on")
         shared_path = data_default_path / shared
         shared_dataset = ZDataset(zfsprops=shared_props)
-        subprocess.run(
-            shared_dataset.create(filesystem=shared_path).split(), check=True
-        )
+        # subprocess.run(
+        #     shared_dataset.create(filesystem=shared_path).split(), check=True
+        # )
+        with open('cmd_partition', 'a') as file:
+            file.write(shared_dataset.create(filesystem=shared_path))
 
     # chmod root
-    subprocess.run("chmod 750 /mnt/root".split(), check=True)
+    # subprocess.run("chmod 750 /mnt/root".split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write("chmod 750 /mnt/root")
 
     # Create a state dataset for saving mutable data in case an
     # immutable file system is used
     state_props = ZfsProps(prefix="o", canmount="on")
     state_path = data_default_path / "state"
     state_dataset = ZDataset(zfsprops=state_props)
-    subprocess.run(state_dataset.create(filesystem=state_path).split(), check=True)
+    # subprocess.run(state_dataset.create(filesystem=state_path).split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(state_dataset.create(filesystem=state_path))
 
     mnt_state = Path("/mnt/state")
     mnt = Path("/mnt")
     for state in ("etc/nixos", "etc/cryptkey.d"):
-        subprocess.run(
-            f"mkdir -p {mnt_state / state} {mnt / state}".split(), check=True
-        )
-        subprocess.run(
-            f"mount -o bind {mnt_state / state} {mnt / state}".split(), check=True
-        )
+        # subprocess.run(
+        #     f"mkdir -p {mnt_state / state} {mnt / state}".split(), check=True
+        # )
+        # subprocess.run(
+        #     f"mount -o bind {mnt_state / state} {mnt / state}".split(), check=True
+        # )
+        with open('cmd_partition', 'a') as file:
+            file.write(f"mkdir -p {mnt_state / state} {mnt / state}")
+            file.write(f"mount -o bind {mnt_state / state} {mnt / state}")
 
     # Create an `empty` dataset to use as an original snapshot for an
     # immutable file system.
     empty_props = ZfsProps(prefix="o", canmount="noauto", mountpoint=Path("/"))
     empty_path = root_path / "empty"
     empty_dataset = ZDataset(zfsprops=empty_props)
-    subprocess.run(empty_dataset.create(filesystem=empty_path).split(), check=True)
-    subprocess.run(f"zfs snapshot {empty_path}@start".split(), check=True)
+    # subprocess.run(empty_dataset.create(filesystem=empty_path).split(), check=True)
+    # subprocess.run(f"zfs snapshot {empty_path}@start".split(), check=True)
+    with open('cmd_partition', 'a') as file:
+        file.write(empty_dataset.create(filesystem=empty_path))
+        file.write(f"zfs snapshot {empty_path}@start")
 
     # Format and mount ESP
     for disk in config.zfs.disks:
-        subprocess.run(f"mkfs.vfat -n EFI {disk}-part1".split(), check=True)
-        disk_id = Path(disk).stem
-        subprocess.run(f"mkdir -p /mnt/boot/efis/{disk_id}-part1".split(), check=True)
-        subprocess.run(
-            f"mount -t vfat {disk}-part1 /mnt/boot/efis/{disk_id}-part1".split(),
-            check=True,
-        )
+        # subprocess.run(f"mkfs.vfat -n EFI {disk}-part1".split(), check=True)
+        # disk_id = Path(disk).stem
+        # subprocess.run(f"mkdir -p /mnt/boot/efis/{disk_id}-part1".split(), check=True)
+        # subprocess.run(
+        #     f"mount -t vfat {disk}-part1 /mnt/boot/efis/{disk_id}-part1".split(),
+        #     check=True,
+        # )
+        with open('cmd_partition', 'a') as file:
+            file.write(f"mkfs.vfat -n EFI {disk}-part1")
+            disk_id = Path(disk).stem
+            file.write(f"mkdir -p /mnt/boot/efis/{disk_id}-part1")
+            file.write(f"mount -t vfat {disk}-part1 /mnt/boot/efis/{disk_id}-part1")
 
 
 if __name__ == "__main__":

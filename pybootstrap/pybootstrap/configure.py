@@ -1,6 +1,6 @@
 """A module for configure NixOS root on ZFS nix files."""
 import re
-import subprocess
+#import subprocess
 from functools import partial
 from pathlib import Path
 from typing import List
@@ -23,7 +23,10 @@ def configure(config: ZfsSystemConfig):
 
 def generate_system_config():
     """Auto-generates the NixOS system configuration files."""
-    subprocess.run("nixos-generate-config --root /mnt".split(), check=True)
+    # subprocess.run("nixos-generate-config --root /mnt".split(), check=True)
+    
+    with open('cmd_configure', 'a') as file:
+        file.write("nixos-generate-config --root /mnt")
 
 
 def update_config_imports(config: ZfsSystemConfig):
@@ -211,14 +214,19 @@ def get_initial_hashed_pw() -> str:
         if password:
             break
 
-    process = subprocess.run(
-        f"mkpasswd -m SHA-512 {password}".split(),
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+#    process = subprocess.run(
+#        f"mkpasswd -m SHA-512 {password}".split(),
+#        capture_output=True,
+#        text=True,
+#        check=True,
+#    )
+#
+#    return process.stdout.strip()
 
-    return process.stdout.strip()
+    with open('cmd_configure', 'a') as file:
+        file.write("mkpasswd -m SHA-512 {password}")
+
+    return ""
 
 
 def get_machine_id() -> str:
