@@ -16,7 +16,7 @@ def _verify_root():
 
 
 def main():
-    _verify_root()
+    # _verify_root()
     config = prepare.prepare()
     partition.partition(config=config)
     configure.configure(config=config)

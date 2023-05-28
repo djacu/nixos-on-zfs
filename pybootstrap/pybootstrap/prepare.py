@@ -4,7 +4,7 @@ import json
 import math
 import os
 import string
-#import subprocess
+import subprocess
 from pathlib import Path
 from time import sleep
 from typing import List, NamedTuple, Optional, Sequence
@@ -148,6 +148,7 @@ def ask_for_disk_selection(blk_devs: List[BlockDevice]) -> List[str]:
     formatted_blk_devs = tabulate_block_devices(blk_devs=blk_devs, keys=keys)
 
     while True:
+        print(blk_devs)
         response = questionary.checkbox(
             message="Select disks to add to the pool", choices=formatted_blk_devs
         ).ask()
@@ -204,21 +205,22 @@ def get_block_devices() -> List[BlockDevice]:
     non_blk_fields = BlockDevice._field_defaults.keys()
     lsblk_cols = ",".join((key for key in blk_fields if key not in non_blk_fields))
 
-#    process = subprocess.run(
-#        f"lsblk -d --json -o {lsblk_cols}".split(),
-#        capture_output=True,
-#        text=True,
-#        check=False,
-#    )
-#    block_devices = json.loads(process.stdout)["blockdevices"]
-#    block_devices = [BlockDevice(**dev) for dev in block_devices]
-#    disks_only = list(filter(lambda dev: dev.type == "disk", block_devices))
-#    return disks_only
+    process = subprocess.run(
+        f"lsblk -d --json -o {lsblk_cols}".split(),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    block_devices = json.loads(process.stdout)["blockdevices"]
+    block_devices = [BlockDevice(**dev) for dev in block_devices]
+    disks_only = list(filter(lambda dev: dev.type == "disk", block_devices))
+    #return disks_only
 
     with open('cmd_prepare', 'a') as file:
         file.write(f"lsblk -d --json -o {lsblk_cols}")
 
-    return []
+    #return []
+    return disks_only
 
 
 def get_disks_by_id() -> List[DiskById]:

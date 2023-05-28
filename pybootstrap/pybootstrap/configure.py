@@ -13,12 +13,12 @@ from pybootstrap.prepare import ZfsSystemConfig
 def configure(config: ZfsSystemConfig):
     """Setup the NixOS configuration files."""
     generate_system_config()
-    update_config_imports(config=config)
-    add_experimental_features_to_configuration(config=config)
-    enable_network_manager(config=config)
-    remove_systemd_boot_refs(config=config)
-    update_hardware_config(config=config)
-    update_zfs_nix_file(config=config)
+    # update_config_imports(config=config)
+    # add_experimental_features_to_configuration(config=config)
+    # enable_network_manager(config=config)
+    # remove_systemd_boot_refs(config=config)
+    # update_hardware_config(config=config)
+    # update_zfs_nix_file(config=config)
 
 
 def generate_system_config():

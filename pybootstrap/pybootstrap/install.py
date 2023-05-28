@@ -31,16 +31,16 @@ def install(config: ZfsSystemConfig):
 
     with open('cmd_install', 'a') as file:
 
-        file.write(f"zfs snapshot -r {rpool_nix}@install_start")
-        file.write(f"zfs snapshot -r {bpool_nix}@install_start")
+        file.write(f"zfs snapshot -r {rpool_nix}@install_start" + "\n")
+        file.write(f"zfs snapshot -r {bpool_nix}@install_start" + "\n")
 
         nixos_install = "nixos-install -v --show-trace --no-root-passwd --root /mnt"
-        file.write(nixos_install)
+        file.write(nixos_install + "\n")
 
-        file.write(f"zfs snapshot -r {rpool_nix}@install")
-        file.write(f"zfs snapshot -r {bpool_nix}@install")
+        file.write(f"zfs snapshot -r {rpool_nix}@install" + "\n")
+        file.write(f"zfs snapshot -r {bpool_nix}@install" + "\n")
 
-        file.write("umount /mnt/boot/efis/*")
+        file.write("umount /mnt/boot/efis/*" + "\n")
 
-        file.write(f"zpool export {bpool_id}")
-        file.write(f"zpool export {rpool_id}")
+        file.write(f"zpool export {bpool_id}" + "\n")
+        file.write(f"zpool export {rpool_id}" + "\n")
